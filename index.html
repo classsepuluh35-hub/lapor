@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LAPOR_YOU</title>
+    <title>SIKAT @2026</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -25,6 +25,23 @@
         }
         canvas {
             touch-action: none; /* Mencegah scrolling browser saat menggambar tanda tangan di HP */
+        }
+        /* Kolom "No" & "Nama" (berisi NIS/NISN) dibuat sticky di tabel Rincian Siswa
+           (Wali Kelas & Wali Guru) supaya tidak ikut bergeser saat kolom Tanggal
+           yang banyak digeser/discroll ke kanan. Elemen/kelas baru, tidak mengubah
+           style/kelas lain yang sudah berjalan. */
+        .sikat-sticky-no {
+            position: sticky;
+            left: 0;
+            z-index: 5;
+            background-color: #fff;
+        }
+        .sikat-sticky-nama {
+            position: sticky;
+            left: 2rem; /* selaras dengan lebar kolom No (w-8 = 2rem) */
+            z-index: 5;
+            background-color: #fff;
+            box-shadow: 2px 0 4px -2px rgba(0,0,0,0.12);
         }
         @media print {
             body * {
@@ -206,6 +223,8 @@
                                     <option value="Izin">Izin</option>
                                     <option value="Alfa">Alfa</option>
                                     <option value="Pulang Cepat">Pulang Cepat</option>
+                                    <option value="Bolos">Bolos</option>
+                                    <option value="Izin Terlambat">Izin Terlambat</option>
                                 </select>
                             </div>
                         </div>
@@ -215,7 +234,7 @@
                     </div>
 
                     <!-- Cards Tampilan Hasil Rekapan -->
-                    <div class="grid grid-cols-3 sm:grid-cols-7 gap-1.5 pt-2">
+                    <div class="grid grid-cols-3 sm:grid-cols-9 gap-1.5 pt-2">
                         <div onclick="showAbsenStatusPopup('Hadir Hari Ini', (window.homeAbsenByStatusToday && homeAbsenByStatusToday.Hadir) || [])" class="bg-emerald-50 text-emerald-700 p-2.5 rounded-xl text-center cursor-pointer active:scale-95 transition">
                             <span class="text-[8px] font-bold block">HADIR</span>
                             <span id="rekapHadir" class="text-base font-black mt-1 block">0</span>
@@ -243,6 +262,14 @@
                         <div onclick="showAbsenStatusPopup('Pulang Cepat Hari Ini', (window.homeAbsenByStatusToday && homeAbsenByStatusToday.PulangCepat) || [])" class="bg-orange-50 text-orange-700 p-2.5 rounded-xl text-center cursor-pointer active:scale-95 transition">
                             <span class="text-[8px] font-bold block uppercase truncate">P. Cepat</span>
                             <span id="rekapPulangCepat" class="text-base font-black mt-1 block">0</span>
+                        </div>
+                        <div onclick="showAbsenStatusPopup('Bolos Hari Ini', (window.homeAbsenByStatusToday && homeAbsenByStatusToday.Bolos) || [])" class="bg-red-50 text-red-700 p-2.5 rounded-xl text-center cursor-pointer active:scale-95 transition">
+                            <span class="text-[8px] font-bold block uppercase">BOLOS</span>
+                            <span id="rekapBolos" class="text-base font-black mt-1 block">0</span>
+                        </div>
+                        <div onclick="showAbsenStatusPopup('Izin Terlambat Hari Ini', (window.homeAbsenByStatusToday && homeAbsenByStatusToday.IzinTerlambat) || [])" class="bg-cyan-50 text-cyan-700 p-2.5 rounded-xl text-center cursor-pointer active:scale-95 transition">
+                            <span class="text-[8px] font-bold block uppercase truncate">Izin T.</span>
+                            <span id="rekapIzinTerlambat" class="text-base font-black mt-1 block">0</span>
                         </div>
                     </div>
 
@@ -479,6 +506,8 @@
                                 <span><b>I</b>:Izin</span>
                                 <span><b>A</b>:Alfa</span>
                                 <span><b>PC</b>:P.Cepat</span>
+                                <span><b>B</b>:Bolos</span>
+                                <span><b>IT</b>:Izin Terlambat</span>
                             </div>
                         </div>
                         
@@ -614,7 +643,7 @@
                     <h4 class="font-extrabold text-xs text-slate-800 uppercase tracking-wide">
                         <i class="fa-solid fa-chart-line text-indigo-600 mr-1.5"></i> Rekapan Absen Kelas Binaan
                     </h4>
-                    <div class="grid grid-cols-3 sm:grid-cols-7 gap-1.5 text-center">
+                    <div class="grid grid-cols-3 sm:grid-cols-9 gap-1.5 text-center">
                         <div onclick="showAbsenStatusPopup('Hadir Hari Ini', (window.waliAbsenByStatusToday && waliAbsenByStatusToday.Hadir) || [])" class="bg-emerald-50 text-emerald-700 p-2 rounded-2xl cursor-pointer active:scale-95 transition">
                             <span class="text-[8px] font-bold block uppercase">Hadir</span>
                             <span id="wkRekapHadir" class="text-sm font-black block mt-0.5">0</span>
@@ -648,6 +677,16 @@
                         <div onclick="showAbsenStatusPopup('Pulang Cepat Hari Ini', (window.waliAbsenByStatusToday && waliAbsenByStatusToday.PulangCepat) || [])" class="bg-orange-50 text-orange-700 p-2 rounded-2xl cursor-pointer active:scale-95 transition">
                             <span class="text-[8px] font-bold block uppercase truncate">P. Cepat</span>
                             <span id="wkRekapPulangCepat" class="text-sm font-black block mt-0.5">0</span>
+                            <span class="text-[8px] font-medium block">kali</span>
+                        </div>
+                        <div onclick="showAbsenStatusPopup('Bolos Hari Ini', (window.waliAbsenByStatusToday && waliAbsenByStatusToday.Bolos) || [])" class="bg-red-50 text-red-700 p-2 rounded-2xl cursor-pointer active:scale-95 transition">
+                            <span class="text-[8px] font-bold block uppercase">Bolos</span>
+                            <span id="wkRekapBolos" class="text-sm font-black block mt-0.5">0</span>
+                            <span class="text-[8px] font-medium block">kali</span>
+                        </div>
+                        <div onclick="showAbsenStatusPopup('Izin Terlambat Hari Ini', (window.waliAbsenByStatusToday && waliAbsenByStatusToday.IzinTerlambat) || [])" class="bg-cyan-50 text-cyan-700 p-2 rounded-2xl cursor-pointer active:scale-95 transition">
+                            <span class="text-[8px] font-bold block uppercase truncate">Izin T.</span>
+                            <span id="wkRekapIzinTerlambat" class="text-sm font-black block mt-0.5">0</span>
                             <span class="text-[8px] font-medium block">kali</span>
                         </div>
                     </div>
@@ -688,6 +727,8 @@
                                 <option value="Izin">Izin</option>
                                 <option value="Alfa">Alfa</option>
                                 <option value="Pulang Cepat">Pulang Cepat</option>
+                                <option value="Bolos">Bolos</option>
+                                <option value="Izin Terlambat">Izin Terlambat</option>
                             </select>
                         </div>
                     </div>
@@ -715,7 +756,7 @@
                         </div>
 
                         <!-- Rekapan Summary untuk Cetakan PDF -->
-                        <div class="grid grid-cols-7 gap-1 text-[8px] text-center font-bold">
+                        <div class="grid grid-cols-3 sm:grid-cols-9 gap-1 text-[8px] text-center font-bold">
                             <div class="bg-emerald-50 text-emerald-700 p-1 rounded-lg">Hadir: <span id="wkTotalHadir">0</span></div>
                             <div class="bg-yellow-50 text-yellow-700 p-1 rounded-lg">T: <span id="wkTotalTerlambat">0</span></div>
                             <div class="bg-blue-50 text-blue-700 p-1 rounded-lg">Dispen: <span id="wkTotalDispen">0</span></div>
@@ -723,6 +764,8 @@
                             <div class="bg-purple-50 text-purple-700 p-1 rounded-lg">Izin: <span id="wkTotalIzin">0</span></div>
                             <div class="bg-rose-50 text-rose-700 p-1 rounded-lg">Alfa: <span id="wkTotalAlfa">0</span></div>
                             <div class="bg-orange-50 text-orange-700 p-1 rounded-lg">PC: <span id="wkTotalPulangCepat">0</span></div>
+                            <div class="bg-red-50 text-red-700 p-1 rounded-lg">Bolos: <span id="wkTotalBolos">0</span></div>
+                            <div class="bg-cyan-50 text-cyan-700 p-1 rounded-lg">IT: <span id="wkTotalIzinTerlambat">0</span></div>
                         </div>
 
                         <!-- Laporan Tabel Hasil Deteksi -->
@@ -730,9 +773,10 @@
                             <table class="w-full text-left text-xs">
                                 <thead id="wkSosenTableHead">
                                     <tr class="border-b border-slate-100 text-slate-400 text-[10px]">
-                                        <th class="py-2 w-8">No</th>
-                                        <th class="py-2">Nama</th>
+                                        <th class="py-2 w-8 sikat-sticky-no">No</th>
+                                        <th class="py-2 sikat-sticky-nama">Nama</th>
                                         <th class="py-2">Tanggal</th>
+                                        <th class="py-2 text-center">Jumlah</th>
                                     </tr>
                                 </thead>
                                 <tbody id="wkSosenTable" class="divide-y divide-slate-100">
@@ -1068,6 +1112,8 @@
                                         <option value="Izin">Izin</option>
                                         <option value="Alfa">Alfa</option>
                                         <option value="Pulang Cepat">Pulang Cepat</option>
+                                        <option value="Bolos">Bolos</option>
+                                        <option value="Izin Terlambat">Izin Terlambat</option>
                                     </select>
                                 </div>
                             </div>
@@ -1095,7 +1141,7 @@
                                 </div>
 
                                 <!-- Rekapan Summary untuk Cetakan PDF -->
-                                <div class="grid grid-cols-7 gap-1 text-[8px] text-center font-bold">
+                                <div class="grid grid-cols-3 sm:grid-cols-9 gap-1 text-[8px] text-center font-bold">
                                     <div class="bg-emerald-50 text-emerald-700 p-1 rounded-lg">Hadir: <span id="wgTotalHadir">0</span></div>
                                     <div class="bg-yellow-50 text-yellow-700 p-1 rounded-lg">T: <span id="wgTotalTerlambat">0</span></div>
                                     <div class="bg-blue-50 text-blue-700 p-1 rounded-lg">Dispen: <span id="wgTotalDispen">0</span></div>
@@ -1103,6 +1149,8 @@
                                     <div class="bg-purple-50 text-purple-700 p-1 rounded-lg">Izin: <span id="wgTotalIzin">0</span></div>
                                     <div class="bg-rose-50 text-rose-700 p-1 rounded-lg">Alfa: <span id="wgTotalAlfa">0</span></div>
                                     <div class="bg-orange-50 text-orange-700 p-1 rounded-lg">PC: <span id="wgTotalPulangCepat">0</span></div>
+                                    <div class="bg-red-50 text-red-700 p-1 rounded-lg">Bolos: <span id="wgTotalBolos">0</span></div>
+                                    <div class="bg-cyan-50 text-cyan-700 p-1 rounded-lg">IT: <span id="wgTotalIzinTerlambat">0</span></div>
                                 </div>
 
                                 <!-- Laporan Tabel Hasil Deteksi -->
@@ -1110,9 +1158,10 @@
                                     <table class="w-full text-left text-xs">
                                         <thead id="wgSosenTableHead">
                                             <tr class="border-b border-slate-100 text-slate-400 text-[10px]">
-                                                <th class="py-2 w-8">No</th>
-                                                <th class="py-2">Nama</th>
+                                                <th class="py-2 w-8 sikat-sticky-no">No</th>
+                                                <th class="py-2 sikat-sticky-nama">Nama</th>
                                                 <th class="py-2">Tanggal</th>
+                                                <th class="py-2 text-center">Jumlah</th>
                                             </tr>
                                         </thead>
                                         <tbody id="wgSosenTable" class="divide-y divide-slate-100">
@@ -2796,6 +2845,14 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                                     <input type="radio" name="absen-${s.nis}" value="Pulang Cepat" ${isPC ? 'checked' : ''} onchange="handleAbsenRadioChange('${s.nis}', 'Pulang Cepat')" class="accent-orange-600">
                                     <span class="text-orange-700 text-[8px]">PC</span>
                                 </label>
+                                <label class="flex items-center gap-1 px-1.5 py-1.5 bg-white border border-slate-200 rounded-xl cursor-pointer text-[10px] font-bold hover:bg-slate-100 flex-1 justify-center min-w-[36px]">
+                                    <input type="radio" name="absen-${s.nis}" value="Bolos" ${!isPC && currentStatus === 'Bolos' ? 'checked' : ''} onchange="handleAbsenRadioChange('${s.nis}', 'Bolos')" class="accent-red-600">
+                                    <span class="text-red-700 text-[9px]">B</span>
+                                </label>
+                                <label class="flex items-center gap-1 px-1.5 py-1.5 bg-white border border-slate-200 rounded-xl cursor-pointer text-[10px] font-bold hover:bg-slate-100 flex-1 justify-center min-w-[36px]">
+                                    <input type="radio" name="absen-${s.nis}" value="Izin Terlambat" ${!isPC && currentStatus === 'Izin Terlambat' ? 'checked' : ''} onchange="handleAbsenRadioChange('${s.nis}', 'Izin Terlambat')" class="accent-cyan-600">
+                                    <span class="text-cyan-700 text-[8px]">IT</span>
+                                </label>
                             </div>
                         </div>
                         
@@ -2879,7 +2936,9 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                     Sakit: recordsToday.filter(r => r.status === 'Sakit'),
                     Izin: recordsToday.filter(r => r.status === 'Izin'),
                     Alfa: recordsToday.filter(r => r.status === 'Alfa'),
-                    PulangCepat: recordsToday.filter(r => r.status.startsWith('Pulang Cepat'))
+                    PulangCepat: recordsToday.filter(r => r.status.startsWith('Pulang Cepat')),
+                    Bolos: recordsToday.filter(r => r.status === 'Bolos'),
+                    IzinTerlambat: recordsToday.filter(r => r.status === 'Izin Terlambat')
                 };
 
                 applyClientFilters(allRecords, fromDate, null, textKeyword, filterStatus);
@@ -2902,7 +2961,7 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                 filtered = filtered.filter(r => r.status.startsWith(status));
             }
 
-            let h = 0, t = 0, d = 0, s = 0, i = 0, a = 0, pc = 0;
+            let h = 0, t = 0, d = 0, s = 0, i = 0, a = 0, pc = 0, b = 0, itc = 0;
             filtered.forEach(record => {
                 if (record.status === 'Hadir') h++;
                 else if (record.status === 'Terlambat') t++;
@@ -2911,6 +2970,8 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                 else if (record.status === 'Izin') i++;
                 else if (record.status === 'Alfa') a++;
                 else if (record.status.startsWith('Pulang Cepat')) pc++;
+                else if (record.status === 'Bolos') b++;
+                else if (record.status === 'Izin Terlambat') itc++;
             });
 
             document.getElementById('rekapHadir').textContent = h;
@@ -2920,6 +2981,8 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
             document.getElementById('rekapIzin').textContent = i;
             document.getElementById('rekapAlfa').textContent = a;
             document.getElementById('rekapPulangCepat').textContent = pc;
+            document.getElementById('rekapBolos').textContent = b;
+            document.getElementById('rekapIzinTerlambat').textContent = itc;
 
             renderHomeSearchResults(filtered);
         }
@@ -2943,6 +3006,8 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                 else if (r.status === 'Sakit') badgeClass = "bg-amber-50 text-amber-700";
                 else if (r.status === 'Izin') badgeClass = "bg-purple-50 text-purple-700";
                 else if (r.status === 'Alfa') badgeClass = "bg-rose-50 text-rose-700";
+                else if (r.status === 'Bolos') badgeClass = "bg-red-50 text-red-700";
+                else if (r.status === 'Izin Terlambat') badgeClass = "bg-cyan-50 text-cyan-700";
                 else if (r.status.startsWith('Pulang Cepat')) {
                     badgeClass = "bg-orange-50 text-orange-700";
                     statusLabel = "Pulang Cepat";
@@ -3350,7 +3415,9 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                     Sakit: recordsToday.filter(r => r.status === 'Sakit'),
                     Izin: recordsToday.filter(r => r.status === 'Izin'),
                     Alfa: recordsToday.filter(r => r.status === 'Alfa'),
-                    PulangCepat: recordsToday.filter(r => r.status.startsWith('Pulang Cepat'))
+                    PulangCepat: recordsToday.filter(r => r.status.startsWith('Pulang Cepat')),
+                    Bolos: recordsToday.filter(r => r.status === 'Bolos'),
+                    IzinTerlambat: recordsToday.filter(r => r.status === 'Izin Terlambat')
                 };
 
                 // Kartu Rekapan Absen Kelas Binaan di Beranda SELALU menampilkan data
@@ -3363,6 +3430,8 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                 document.getElementById('wkRekapIzin').textContent = window.waliAbsenByStatusToday.Izin.length;
                 document.getElementById('wkRekapAlfa').textContent = window.waliAbsenByStatusToday.Alfa.length;
                 document.getElementById('wkRekapPulangCepat').textContent = window.waliAbsenByStatusToday.PulangCepat.length;
+                document.getElementById('wkRekapBolos').textContent = window.waliAbsenByStatusToday.Bolos.length;
+                document.getElementById('wkRekapIzinTerlambat').textContent = window.waliAbsenByStatusToday.IzinTerlambat.length;
 
                 processWaliReportsUI(classSiswa, attendanceRecords, filterStartDate, filterEndDate, filterSiswa, filterStat);
             });
@@ -3405,11 +3474,14 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                 'S': 'text-amber-600',
                 'I': 'text-purple-600',
                 'A': 'text-rose-600',
-                'PC': 'text-orange-600'
+                'PC': 'text-orange-600',
+                'B': 'text-red-600',
+                'IT': 'text-cyan-600'
             };
 
             // Ubah nama status menjadi kode satu/dua huruf untuk tabel cetak:
-            // A = Alfa, H = Hadir, S = Sakit, I = Izin, D = Dispen, T = Terlambat, PC = Pulang Cepat
+            // A = Alfa, H = Hadir, S = Sakit, I = Izin, D = Dispen, T = Terlambat, PC = Pulang Cepat,
+            // B = Bolos, IT = Izin Terlambat
             function statusKeKode(status) {
                 if (!status) return '-';
                 if (status.startsWith('Pulang Cepat')) return 'PC';
@@ -3419,10 +3491,12 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                 if (status === 'Izin') return 'I';
                 if (status === 'Dispen') return 'D';
                 if (status === 'Terlambat') return 'T';
+                if (status === 'Bolos') return 'B';
+                if (status === 'Izin Terlambat') return 'IT';
                 return status.charAt(0).toUpperCase();
             }
 
-            let gHadir = 0, gTerlambat = 0, gDispen = 0, gSakit = 0, gIzin = 0, gAlfa = 0, gPulangCepat = 0;
+            let gHadir = 0, gTerlambat = 0, gDispen = 0, gSakit = 0, gIzin = 0, gAlfa = 0, gPulangCepat = 0, gBolos = 0, gIzinTerlambat = 0;
             recordsForBinaan.forEach(r => {
                 if (r.status === 'Hadir') gHadir++;
                 else if (r.status === 'Terlambat') gTerlambat++;
@@ -3431,6 +3505,8 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                 else if (r.status === 'Izin') gIzin++;
                 else if (r.status === 'Alfa') gAlfa++;
                 else if (r.status.startsWith('Pulang Cepat')) gPulangCepat++;
+                else if (r.status === 'Bolos') gBolos++;
+                else if (r.status === 'Izin Terlambat') gIzinTerlambat++;
             });
 
             // Daftar tanggal unik (urut) dari data yang sudah difilter -> jadi kolom-kolom di bawah header "Tanggal"
@@ -3447,12 +3523,21 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
 
             thead.innerHTML = `
                 <tr class="border-b border-slate-100 text-slate-400 text-[10px]">
-                    <th class="py-2 w-8" rowspan="2">No</th>
-                    <th class="py-2" rowspan="2">Nama</th>
+                    <th class="py-2 w-8 sikat-sticky-no" rowspan="2">No</th>
+                    <th class="py-2 sikat-sticky-nama" rowspan="2">Nama</th>
                     <th class="py-2 text-center" colspan="${tanggalUnik.length || 1}">Tanggal</th>
+                    <th class="py-2 text-center" colspan="8">Jumlah</th>
                 </tr>
                 <tr class="border-b border-slate-100 text-slate-400 text-[9px]">
                     ${kolomTanggalHTML}
+                    <th class="py-1 px-1 text-center text-emerald-600">H</th>
+                    <th class="py-1 px-1 text-center text-yellow-600">T</th>
+                    <th class="py-1 px-1 text-center text-blue-600">D</th>
+                    <th class="py-1 px-1 text-center text-amber-600">S</th>
+                    <th class="py-1 px-1 text-center text-purple-600">I</th>
+                    <th class="py-1 px-1 text-center text-red-600">B</th>
+                    <th class="py-1 px-1 text-center text-orange-600">PC</th>
+                    <th class="py-1 px-1 text-center text-cyan-600">IT</th>
                 </tr>
             `;
 
@@ -3460,9 +3545,22 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
             tbody.innerHTML = '';
 
             siswaBinaanDisplay.forEach((s, idx) => {
+                const recordsSiswaIni = recordsForBinaan.filter(r => String(r.nis).trim() === String(s.nis).trim());
                 const rekapPerTanggal = {};
-                recordsForBinaan.filter(r => String(r.nis).trim() === String(s.nis).trim()).forEach(r => {
+                recordsSiswaIni.forEach(r => {
                     rekapPerTanggal[r.tanggal] = statusKeKode(r.status);
+                });
+                // Jumlah per status untuk siswa ini, sesuai filter yang aktif
+                let jH = 0, jT = 0, jD = 0, jS = 0, jI = 0, jB = 0, jPC = 0, jIT = 0;
+                recordsSiswaIni.forEach(r => {
+                    if (r.status === 'Hadir') jH++;
+                    else if (r.status === 'Terlambat') jT++;
+                    else if (r.status === 'Dispen') jD++;
+                    else if (r.status === 'Sakit') jS++;
+                    else if (r.status === 'Izin') jI++;
+                    else if (r.status === 'Bolos') jB++;
+                    else if (r.status.startsWith('Pulang Cepat')) jPC++;
+                    else if (r.status === 'Izin Terlambat') jIT++;
                 });
 
                 const selTanggalHTML = tanggalUnik.length
@@ -3473,20 +3571,32 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                       }).join('')
                     : '<td class="py-2 px-1.5 text-center text-slate-300">-</td>';
 
+                const jumlahHTML = `
+                    <td class="py-3 px-1 text-center font-extrabold text-emerald-600">${jH}</td>
+                    <td class="py-3 px-1 text-center font-extrabold text-yellow-600">${jT}</td>
+                    <td class="py-3 px-1 text-center font-extrabold text-blue-600">${jD}</td>
+                    <td class="py-3 px-1 text-center font-extrabold text-amber-600">${jS}</td>
+                    <td class="py-3 px-1 text-center font-extrabold text-purple-600">${jI}</td>
+                    <td class="py-3 px-1 text-center font-extrabold text-red-600">${jB}</td>
+                    <td class="py-3 px-1 text-center font-extrabold text-orange-600">${jPC}</td>
+                    <td class="py-3 px-1 text-center font-extrabold text-cyan-600">${jIT}</td>
+                `;
+
                 tbody.innerHTML += `
                     <tr class="border-b border-slate-100 hover:bg-slate-50/50 text-xs">
-                        <td class="py-3 text-center text-slate-500 font-semibold">${idx + 1}</td>
-                        <td class="py-3 font-semibold text-slate-800">
+                        <td class="py-3 text-center text-slate-500 font-semibold sikat-sticky-no">${idx + 1}</td>
+                        <td class="py-3 font-semibold text-slate-800 sikat-sticky-nama">
                             <div>${s.nama}</div>
                             <div class="text-[9px] text-slate-400 font-medium">NIS: ${s.nis}</div>
                         </td>
                         ${selTanggalHTML}
+                        ${jumlahHTML}
                     </tr>
                 `;
             });
 
             if (siswaBinaanDisplay.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="${(tanggalUnik.length || 1) + 2}" class="py-6 text-center text-slate-400 text-xs">Tidak ada data absensi sesuai filter.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${(tanggalUnik.length || 1) + 10}" class="py-6 text-center text-slate-400 text-xs">Tidak ada data absensi sesuai filter.</td></tr>`;
             }
 
             document.getElementById('wkTotalHadir').textContent = gHadir;
@@ -3496,6 +3606,8 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
             document.getElementById('wkTotalIzin').textContent = gIzin;
             document.getElementById('wkTotalAlfa').textContent = gAlfa;
             document.getElementById('wkTotalPulangCepat').textContent = gPulangCepat;
+            document.getElementById('wkTotalBolos').textContent = gBolos;
+            document.getElementById('wkTotalIzinTerlambat').textContent = gIzinTerlambat;
             // Catatan: wkRekap* (kartu Beranda) TIDAK diisi di sini lagi — kartu itu
             // selalu memakai data HARI INI yang di-set di renderWaliReports(), supaya
             // tidak berubah mengikuti filter Laporan Absensi yang murni untuk cetak.
@@ -4045,7 +4157,7 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
 
                     if (allSiswa.length === 0) {
                         document.getElementById('wgRekapAbsenGlobalCard').innerHTML = '<p class="text-xs text-slate-400 italic text-center py-6">Belum ada siswa binaan asuh.</p>';
-                        document.getElementById('wgSosenTable').innerHTML = '<tr><td colspan="3" class="py-6 text-center text-slate-400 text-xs">Belum ada siswa binaan asuh.</td></tr>';
+                        document.getElementById('wgSosenTable').innerHTML = '<tr><td colspan="4" class="py-6 text-center text-slate-400 text-xs">Belum ada siswa binaan asuh.</td></tr>';
                         return;
                     }
                     
@@ -4069,7 +4181,7 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                         targetRecords = targetRecords.filter(r => r.status.startsWith(filterStatus));
                     }
 
-                    let totalHadir = 0, totalTerlambat = 0, totalDispen = 0, totalSakit = 0, totalIzin = 0, totalAlfa = 0, totalPulangCepat = 0;
+                    let totalHadir = 0, totalTerlambat = 0, totalDispen = 0, totalSakit = 0, totalIzin = 0, totalAlfa = 0, totalPulangCepat = 0, totalBolos = 0, totalIzinTerlambat = 0;
 
                     targetRecords.forEach(r => {
                         if (r.status === 'Hadir') totalHadir++;
@@ -4079,6 +4191,8 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                         else if (r.status === 'Izin') totalIzin++;
                         else if (r.status === 'Alfa') totalAlfa++;
                         else if (r.status.startsWith('Pulang Cepat')) totalPulangCepat++;
+                        else if (r.status === 'Bolos') totalBolos++;
+                        else if (r.status === 'Izin Terlambat') totalIzinTerlambat++;
                     });
                     
                     const uniqueClasses = [...new Set(allSiswa.map(s => s.kelas))].join(", ");
@@ -4094,7 +4208,9 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                         Sakit: recordsToday.filter(r => r.status === 'Sakit'),
                         Izin: recordsToday.filter(r => r.status === 'Izin'),
                         Alfa: recordsToday.filter(r => r.status === 'Alfa'),
-                        PulangCepat: recordsToday.filter(r => r.status.startsWith('Pulang Cepat'))
+                        PulangCepat: recordsToday.filter(r => r.status.startsWith('Pulang Cepat')),
+                        Bolos: recordsToday.filter(r => r.status === 'Bolos'),
+                        IzinTerlambat: recordsToday.filter(r => r.status === 'Izin Terlambat')
                     };
 
                     document.getElementById('wgRekapAbsenGlobalCard').innerHTML = `
@@ -4129,6 +4245,14 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                                     <span class="text-slate-555 font-medium">Alfa</span>
                                     <span class="font-extrabold text-rose-600 bg-rose-50 px-3 py-1 rounded-xl text-[11px]">${totalAlfa} kali</span>
                                 </div>
+                                <div onclick="showAbsenStatusPopup('Bolos Hari Ini', (window.wgAbsenByStatusToday && wgAbsenByStatusToday.Bolos) || [])" class="flex justify-between items-center p-3 bg-white border border-red-100 rounded-2xl cursor-pointer active:scale-95 transition">
+                                    <span class="text-slate-555 font-medium">Bolos</span>
+                                    <span class="font-extrabold text-red-600 bg-red-50 px-3 py-1 rounded-xl text-[11px]">${totalBolos} kali</span>
+                                </div>
+                                <div onclick="showAbsenStatusPopup('Izin Terlambat Hari Ini', (window.wgAbsenByStatusToday && wgAbsenByStatusToday.IzinTerlambat) || [])" class="flex justify-between items-center p-3 bg-white border border-cyan-100 rounded-2xl cursor-pointer active:scale-95 transition">
+                                    <span class="text-slate-555 font-medium">Izin Terlambat</span>
+                                    <span class="font-extrabold text-cyan-600 bg-cyan-50 px-3 py-1 rounded-xl text-[11px]">${totalIzinTerlambat} kali</span>
+                                </div>
                                 <div onclick="showAbsenStatusPopup('Pulang Cepat Hari Ini', (window.wgAbsenByStatusToday && wgAbsenByStatusToday.PulangCepat) || [])" class="flex justify-between items-center p-3 bg-white border border-orange-100 rounded-2xl col-span-2 cursor-pointer active:scale-95 transition">
                                     <span class="text-slate-555 font-medium">Pulang Cepat</span>
                                     <span class="font-extrabold text-orange-600 bg-orange-50 px-3 py-1 rounded-xl text-[11px]">${totalPulangCepat} kali</span>
@@ -4155,7 +4279,9 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                         'S': 'text-amber-600',
                         'I': 'text-purple-600',
                         'A': 'text-rose-600',
-                        'PC': 'text-orange-600'
+                        'PC': 'text-orange-600',
+                        'B': 'text-red-600',
+                        'IT': 'text-cyan-600'
                     };
                     function statusKeKodeWg(status) {
                         if (!status) return '-';
@@ -4166,6 +4292,8 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                         if (status === 'Izin') return 'I';
                         if (status === 'Dispen') return 'D';
                         if (status === 'Terlambat') return 'T';
+                        if (status === 'Bolos') return 'B';
+                        if (status === 'Izin Terlambat') return 'IT';
                         return status.charAt(0).toUpperCase();
                     }
 
@@ -4188,12 +4316,21 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
 
                     theadWg.innerHTML = `
                         <tr class="border-b border-slate-100 text-slate-400 text-[10px]">
-                            <th class="py-2 w-8" rowspan="2">No</th>
-                            <th class="py-2" rowspan="2">Nama</th>
+                            <th class="py-2 w-8 sikat-sticky-no" rowspan="2">No</th>
+                            <th class="py-2 sikat-sticky-nama" rowspan="2">Nama</th>
                             <th class="py-2 text-center" colspan="${tanggalUnikWg.length || 1}">Tanggal</th>
+                            <th class="py-2 text-center" colspan="8">Jumlah</th>
                         </tr>
                         <tr class="border-b border-slate-100 text-slate-400 text-[9px]">
                             ${kolomTanggalHTMLWg}
+                            <th class="py-1 px-1 text-center text-emerald-600">H</th>
+                            <th class="py-1 px-1 text-center text-yellow-600">T</th>
+                            <th class="py-1 px-1 text-center text-blue-600">D</th>
+                            <th class="py-1 px-1 text-center text-amber-600">S</th>
+                            <th class="py-1 px-1 text-center text-purple-600">I</th>
+                            <th class="py-1 px-1 text-center text-red-600">B</th>
+                            <th class="py-1 px-1 text-center text-orange-600">PC</th>
+                            <th class="py-1 px-1 text-center text-cyan-600">IT</th>
                         </tr>
                     `;
 
@@ -4201,9 +4338,22 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                     tbodyWg.innerHTML = '';
 
                     siswaBinaanDisplayWg.forEach((s, idx) => {
+                        const recordsSiswaIniWg = recordsForBinaanWg.filter(r => String(r.nis).trim() === String(s.nis).trim());
                         const rekapPerTanggal = {};
-                        recordsForBinaanWg.filter(r => String(r.nis).trim() === String(s.nis).trim()).forEach(r => {
+                        recordsSiswaIniWg.forEach(r => {
                             rekapPerTanggal[r.tanggal] = statusKeKodeWg(r.status);
+                        });
+                        // Jumlah per status untuk siswa ini, sesuai filter yang aktif
+                        let jH = 0, jT = 0, jD = 0, jS = 0, jI = 0, jB = 0, jPC = 0, jIT = 0;
+                        recordsSiswaIniWg.forEach(r => {
+                            if (r.status === 'Hadir') jH++;
+                            else if (r.status === 'Terlambat') jT++;
+                            else if (r.status === 'Dispen') jD++;
+                            else if (r.status === 'Sakit') jS++;
+                            else if (r.status === 'Izin') jI++;
+                            else if (r.status === 'Bolos') jB++;
+                            else if (r.status.startsWith('Pulang Cepat')) jPC++;
+                            else if (r.status === 'Izin Terlambat') jIT++;
                         });
 
                         const selTanggalHTML = tanggalUnikWg.length
@@ -4214,20 +4364,32 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                               }).join('')
                             : '<td class="py-2 px-1.5 text-center text-slate-300">-</td>';
 
+                        const jumlahHTMLWg = `
+                            <td class="py-3 px-1 text-center font-extrabold text-emerald-600">${jH}</td>
+                            <td class="py-3 px-1 text-center font-extrabold text-yellow-600">${jT}</td>
+                            <td class="py-3 px-1 text-center font-extrabold text-blue-600">${jD}</td>
+                            <td class="py-3 px-1 text-center font-extrabold text-amber-600">${jS}</td>
+                            <td class="py-3 px-1 text-center font-extrabold text-purple-600">${jI}</td>
+                            <td class="py-3 px-1 text-center font-extrabold text-red-600">${jB}</td>
+                            <td class="py-3 px-1 text-center font-extrabold text-orange-600">${jPC}</td>
+                            <td class="py-3 px-1 text-center font-extrabold text-cyan-600">${jIT}</td>
+                        `;
+
                         tbodyWg.innerHTML += `
                             <tr class="border-b border-slate-100 hover:bg-slate-50/50 text-xs">
-                                <td class="py-3 text-center text-slate-500 font-semibold">${idx + 1}</td>
-                                <td class="py-3 font-semibold text-slate-800">
+                                <td class="py-3 text-center text-slate-500 font-semibold sikat-sticky-no">${idx + 1}</td>
+                                <td class="py-3 font-semibold text-slate-800 sikat-sticky-nama">
                                     <div>${s.nama}</div>
                                     <div class="text-[9px] text-slate-400 font-medium">NIS: ${s.nis}</div>
                                 </td>
                                 ${selTanggalHTML}
+                                ${jumlahHTMLWg}
                             </tr>
                         `;
                     });
 
                     if (siswaBinaanDisplayWg.length === 0) {
-                        tbodyWg.innerHTML = `<tr><td colspan="${(tanggalUnikWg.length || 1) + 2}" class="py-6 text-center text-slate-400 text-xs">Tidak ada data absensi sesuai filter.</td></tr>`;
+                        tbodyWg.innerHTML = `<tr><td colspan="${(tanggalUnikWg.length || 1) + 10}" class="py-6 text-center text-slate-400 text-xs">Tidak ada data absensi sesuai filter.</td></tr>`;
                     }
 
                     document.getElementById('wgTotalHadir').textContent = totalHadir;
@@ -4237,6 +4399,8 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                     document.getElementById('wgTotalIzin').textContent = totalIzin;
                     document.getElementById('wgTotalAlfa').textContent = totalAlfa;
                     document.getElementById('wgTotalPulangCepat').textContent = totalPulangCepat;
+                    document.getElementById('wgTotalBolos').textContent = totalBolos;
+                    document.getElementById('wgTotalIzinTerlambat').textContent = totalIzinTerlambat;
                 }
             });
         }
