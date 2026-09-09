@@ -10,6 +10,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- SheetJS (export Excel) & html2pdf (export PDF) -- dipakai khusus tombol Excel/PDF
+         pada Cetak Laporan Beranda Guru Wali. Library baru, tidak mengubah/menghapus
+         library lain yang sudah dipakai. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -43,7 +48,35 @@
             background-color: #fff;
             box-shadow: 2px 0 4px -2px rgba(0,0,0,0.12);
         }
+        /* Header tabel Rincian Siswa Kelas Binaan (baris "No/Nama/Tanggal/Jumlah"
+           dan baris sub-header tanggal/status H D T S I A PC) dibuat sticky
+           secara VERTIKAL juga, supaya label kolom tidak ikut hilang saat
+           tabel digulir ke atas/bawah -- melengkapi sticky horizontal kolom
+           No/Nama yang sudah ada di atas. Selector baru berbasis ID thead
+           yang sudah ada, tidak mengubah kelas/elemen lain yang sudah berjalan. */
+        #wkSosenTableHead th, #wgSosenTableHead th {
+            position: sticky;
+            z-index: 6;
+            background-color: #fff;
+        }
+        #wkSosenTableHead tr:first-child th, #wgSosenTableHead tr:first-child th {
+            top: 0;
+        }
+        /* Sel pojok (No/Nama) di header perlu sticky top DAN left sekaligus,
+           dengan z-index lebih tinggi supaya selalu tampil di atas sel header
+           lain maupun sel body yang sticky-left saat scroll bersilangan. */
+        #wkSosenTableHead .sikat-sticky-no, #wkSosenTableHead .sikat-sticky-nama,
+        #wgSosenTableHead .sikat-sticky-no, #wgSosenTableHead .sikat-sticky-nama {
+            top: 0;
+            z-index: 9;
+        }
         @media print {
+            /* Layout landscape supaya tabel lebar (rekap banyak kolom bulan) muat
+               dan tidak terpotong saat dicetak / disimpan sebagai PDF dari dialog print. */
+            @page {
+                size: landscape;
+                margin: 10mm;
+            }
             body * {
                 visibility: hidden;
             }
@@ -60,6 +93,27 @@
             }
             .no-print {
                 display: none !important;
+            }
+            /* Matikan sticky & overflow-x-auto saat cetak supaya SELURUH kolom
+               (termasuk rekap per bulan yang banyak) ikut tercetak, tidak
+               terpotong/scroll seperti tampilan di layar. */
+            #printArea .overflow-x-auto, #wgPrintArea .overflow-x-auto {
+                overflow: visible !important;
+            }
+            #printArea table, #wgPrintArea table {
+                width: 100% !important;
+                font-size: 8px;
+            }
+            #printArea .sikat-sticky-no, #printArea .sikat-sticky-nama,
+            #wgPrintArea .sikat-sticky-no, #wgPrintArea .sikat-sticky-nama {
+                position: static !important;
+                box-shadow: none !important;
+            }
+            /* Matikan juga sticky vertikal header thead saat cetak, supaya baris
+               header tidak terulang/aneh di setiap halaman cetakan PDF. */
+            #printArea #wkSosenTableHead th, #printArea #wgSosenTableHead th,
+            #wgPrintArea #wkSosenTableHead th, #wgPrintArea #wgSosenTableHead th {
+                position: static !important;
             }
         }
     </style>
@@ -698,7 +752,7 @@
                         <i class="fa-solid fa-filter text-violet-600 mr-1"></i> Filter Laporan Absensi
                     </h4>
                     
-                    <div class="grid grid-cols-2 gap-2.5">
+                    <div id="wkFilterTanggalContainer" class="grid grid-cols-2 gap-2.5">
                         <div>
                             <label class="block text-[8px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Tanggal Mulai</label>
                             <input type="date" id="wkFilterStartDate" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[11px] focus:ring-1 focus:ring-indigo-500 focus:outline-none">
@@ -706,6 +760,35 @@
                         <div>
                             <label class="block text-[8px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Tanggal Selesai</label>
                             <input type="date" id="wkFilterEndDate" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- OPSI MODE CETAK LAPORAN (Per Tanggal / Per Bulan) -->
+                    <!-- Elemen baru (tidak mengubah elemen/logika lain yang sudah berjalan).
+                         "Per Bulan (Rekap)" dipakai khusus untuk Cetak Laporan rekap bulanan:
+                         No, Nama, lalu per bulan terpilih kolom H/D/T/S/I/A/PC, dan Jumlah. -->
+                    <div class="no-print">
+                        <label class="block text-[8px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Mode Cetak Laporan</label>
+                        <div class="flex gap-4 bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+                            <label class="flex items-center gap-1.5 text-[10px] font-bold text-slate-700 cursor-pointer">
+                                <input type="radio" name="wkModeCetak" id="wkModeCetakTanggal" value="tanggal" checked>
+                                Per Tanggal
+                            </label>
+                            <label class="flex items-center gap-1.5 text-[10px] font-bold text-slate-700 cursor-pointer">
+                                <input type="radio" name="wkModeCetak" id="wkModeCetakBulan" value="bulan">
+                                Per Bulan (Rekap)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="wkFilterBulanContainer" class="hidden grid grid-cols-2 gap-2.5 no-print">
+                        <div>
+                            <label class="block text-[8px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Dari Bulan</label>
+                            <select id="wkFilterBulanMulai" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none"></select>
+                        </div>
+                        <div>
+                            <label class="block text-[8px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Sampai Bulan</label>
+                            <select id="wkFilterBulanSelesai" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none"></select>
                         </div>
                     </div>
 
@@ -740,11 +823,19 @@
 
                 <!-- Print & Table Container -->
                 <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 space-y-4">
-                    <div class="flex justify-between items-center no-print">
+                    <div class="flex flex-col gap-2 no-print">
                         <h4 class="font-extrabold text-xs text-slate-800 uppercase tracking-wide">Rincian Siswa Kelas Binaan</h4>
-                        <button id="wkPrintAbsenBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px] px-3 py-2 rounded-xl flex items-center gap-1 shadow transition transform active:scale-95 uppercase">
-                            <i class="fa-solid fa-print"></i> Cetak Laporan
-                        </button>
+                        <div class="flex flex-wrap gap-1.5">
+                            <button id="wkPrintAbsenBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px] px-3 py-2 rounded-xl flex items-center gap-1 shadow transition transform active:scale-95 uppercase">
+                                <i class="fa-solid fa-print"></i> Cetak
+                            </button>
+                            <button id="wkExportExcelBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] px-3 py-2 rounded-xl flex items-center gap-1 shadow transition transform active:scale-95 uppercase">
+                                <i class="fa-solid fa-file-excel"></i> Excel
+                            </button>
+                            <button id="wkExportPdfBtn" class="bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] px-3 py-2 rounded-xl flex items-center gap-1 shadow transition transform active:scale-95 uppercase">
+                                <i class="fa-solid fa-file-pdf"></i> PDF
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Printable Area Wrapper -->
@@ -769,7 +860,19 @@
                         </div>
 
                         <!-- Laporan Tabel Hasil Deteksi -->
-                        <div class="overflow-x-auto">
+                        <!-- CATATAN PERBAIKAN STICKY HEADER: div ini sebelumnya hanya
+                             overflow-x-auto (untuk scroll geser kanan/kiri). Karena tidak
+                             diberi tinggi terbatas, div tsb tidak pernah scroll sendiri
+                             secara vertikal, sehingga header "No/Nama/Tanggal/Jumlah" &
+                             sub-header status yang sudah diberi position:sticky (lihat
+                             CSS #wkSosenTableHead th) TIDAK PERNAH ikut tertahan saat
+                             halaman digulir ke atas/bawah -- sticky vertikal butuh induk
+                             yang benar-benar scroll. Solusi: beri div ini tinggi maksimum
+                             + overflow-y-auto, sehingga tabel (bukan seluruh halaman) yang
+                             scroll secara internal, dan header tetap menempel di atas kotak
+                             tabel ini saat digulir. Sticky horizontal kolom No/Nama tetap
+                             berjalan seperti semula karena masih dalam div yang sama. -->
+                        <div class="overflow-x-auto overflow-y-auto max-h-[65vh]">
                             <table class="w-full text-left text-xs">
                                 <thead id="wkSosenTableHead">
                                     <tr class="border-b border-slate-100 text-slate-400 text-[10px]">
@@ -1154,7 +1257,10 @@
                                 </div>
 
                                 <!-- Laporan Tabel Hasil Deteksi -->
-                                <div class="overflow-x-auto">
+                                <!-- Sama seperti tabel Wali Kelas: div diberi tinggi maksimum
+                                     + overflow-y-auto supaya tabel scroll secara internal dan
+                                     header sticky ikut tertahan (lihat catatan di tabel wkSosenTableHead). -->
+                                <div class="overflow-x-auto overflow-y-auto max-h-[65vh]">
                                     <table class="w-full text-left text-xs">
                                         <thead id="wgSosenTableHead">
                                             <tr class="border-b border-slate-100 text-slate-400 text-[10px]">
@@ -1565,6 +1671,31 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
 
     <!-- JS LOGIC AND INTEGRATION -->
     <script>
+        // Fungsi bantu baru (berdiri sendiri, tidak mengubah fungsi lain yang sudah
+        // berjalan): menyamakan posisi "top" sticky pada baris ke-2 header tabel
+        // Rincian Siswa Kelas Binaan (baris sub-header tanggal/status) persis di
+        // bawah baris pertama header (No/Nama/Tanggal/Jumlah), diukur otomatis dari
+        // tinggi baris pertama supaya tetap presisi walau ukuran teks/padding
+        // berubah. Dipanggil setiap kali thead.innerHTML digambar ulang.
+        function sikatSyncTheadStickyOffset(theadEl) {
+            if (!theadEl) return;
+            requestAnimationFrame(() => {
+                const rows = theadEl.querySelectorAll('tr');
+                if (rows.length < 2) return;
+                const baris1Tinggi = rows[0].getBoundingClientRect().height;
+                rows[1].querySelectorAll('th').forEach(th => {
+                    th.style.top = baris1Tinggi + 'px';
+                });
+            });
+        }
+
+        // Sinkronkan ulang saat ukuran layar berubah (mis. putar HP) supaya offset
+        // baris ke-2 header tetap presisi.
+        window.addEventListener('resize', () => {
+            sikatSyncTheadStickyOffset(document.getElementById('wkSosenTableHead'));
+            sikatSyncTheadStickyOffset(document.getElementById('wgSosenTableHead'));
+        });
+
         // --- TRANSPARENT INTERCEPTOR/PROXY FOR GOOGLE APPS SCRIPT ---
         // Desain proksi mutakhir untuk mensimulasikan database spreadsheet di luar lingkungan GAS
         if (typeof google === 'undefined' || !google.script || !google.script.run) {
@@ -3433,6 +3564,12 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                 document.getElementById('wkRekapBolos').textContent = window.waliAbsenByStatusToday.Bolos.length;
                 document.getElementById('wkRekapIzinTerlambat').textContent = window.waliAbsenByStatusToday.IzinTerlambat.length;
 
+                // Cache roster siswa binaan & seluruh data absensinya (belum difilter tanggal/status)
+                // supaya fitur Cetak Laporan mode "Per Bulan (Rekap)" bisa langsung memakainya
+                // tanpa perlu request ulang ke backend. Tidak mengubah alur/logika lain.
+                window.wkLastClassSiswa = classSiswa;
+                window.wkLastAttendanceRecords = attendanceRecords;
+
                 processWaliReportsUI(classSiswa, attendanceRecords, filterStartDate, filterEndDate, filterSiswa, filterStat);
             });
         }
@@ -3526,20 +3663,20 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                     <th class="py-2 w-8 sikat-sticky-no" rowspan="2">No</th>
                     <th class="py-2 sikat-sticky-nama" rowspan="2">Nama</th>
                     <th class="py-2 text-center" colspan="${tanggalUnik.length || 1}">Tanggal</th>
-                    <th class="py-2 text-center" colspan="8">Jumlah</th>
+                    <th class="py-2 text-center" colspan="7">Jumlah</th>
                 </tr>
                 <tr class="border-b border-slate-100 text-slate-400 text-[9px]">
                     ${kolomTanggalHTML}
                     <th class="py-1 px-1 text-center text-emerald-600">H</th>
-                    <th class="py-1 px-1 text-center text-yellow-600">T</th>
                     <th class="py-1 px-1 text-center text-blue-600">D</th>
+                    <th class="py-1 px-1 text-center text-yellow-600">T</th>
                     <th class="py-1 px-1 text-center text-amber-600">S</th>
                     <th class="py-1 px-1 text-center text-purple-600">I</th>
-                    <th class="py-1 px-1 text-center text-red-600">B</th>
+                    <th class="py-1 px-1 text-center text-rose-600">A</th>
                     <th class="py-1 px-1 text-center text-orange-600">PC</th>
-                    <th class="py-1 px-1 text-center text-cyan-600">IT</th>
                 </tr>
             `;
+            sikatSyncTheadStickyOffset(thead);
 
             const tbody = document.getElementById('wkSosenTable');
             tbody.innerHTML = '';
@@ -3551,16 +3688,15 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                     rekapPerTanggal[r.tanggal] = statusKeKode(r.status);
                 });
                 // Jumlah per status untuk siswa ini, sesuai filter yang aktif
-                let jH = 0, jT = 0, jD = 0, jS = 0, jI = 0, jB = 0, jPC = 0, jIT = 0;
+                let jH = 0, jD = 0, jT = 0, jS = 0, jI = 0, jA = 0, jPC = 0;
                 recordsSiswaIni.forEach(r => {
                     if (r.status === 'Hadir') jH++;
-                    else if (r.status === 'Terlambat') jT++;
                     else if (r.status === 'Dispen') jD++;
+                    else if (r.status === 'Terlambat') jT++;
                     else if (r.status === 'Sakit') jS++;
                     else if (r.status === 'Izin') jI++;
-                    else if (r.status === 'Bolos') jB++;
+                    else if (r.status === 'Alfa') jA++;
                     else if (r.status.startsWith('Pulang Cepat')) jPC++;
-                    else if (r.status === 'Izin Terlambat') jIT++;
                 });
 
                 const selTanggalHTML = tanggalUnik.length
@@ -3573,13 +3709,12 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
 
                 const jumlahHTML = `
                     <td class="py-3 px-1 text-center font-extrabold text-emerald-600">${jH}</td>
-                    <td class="py-3 px-1 text-center font-extrabold text-yellow-600">${jT}</td>
                     <td class="py-3 px-1 text-center font-extrabold text-blue-600">${jD}</td>
+                    <td class="py-3 px-1 text-center font-extrabold text-yellow-600">${jT}</td>
                     <td class="py-3 px-1 text-center font-extrabold text-amber-600">${jS}</td>
                     <td class="py-3 px-1 text-center font-extrabold text-purple-600">${jI}</td>
-                    <td class="py-3 px-1 text-center font-extrabold text-red-600">${jB}</td>
+                    <td class="py-3 px-1 text-center font-extrabold text-rose-600">${jA}</td>
                     <td class="py-3 px-1 text-center font-extrabold text-orange-600">${jPC}</td>
-                    <td class="py-3 px-1 text-center font-extrabold text-cyan-600">${jIT}</td>
                 `;
 
                 tbody.innerHTML += `
@@ -3596,7 +3731,7 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
             });
 
             if (siswaBinaanDisplay.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="${(tanggalUnik.length || 1) + 10}" class="py-6 text-center text-slate-400 text-xs">Tidak ada data absensi sesuai filter.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${(tanggalUnik.length || 1) + 9}" class="py-6 text-center text-slate-400 text-xs">Tidak ada data absensi sesuai filter.</td></tr>`;
             }
 
             document.getElementById('wkTotalHadir').textContent = gHadir;
@@ -3613,14 +3748,281 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
             // tidak berubah mengikuti filter Laporan Absensi yang murni untuk cetak.
         }
 
-        document.getElementById('wkPrintAbsenBtn').addEventListener('click', () => {
+        // Fungsi baru KHUSUS mode Cetak Laporan "Per Bulan (Rekap)" pada Beranda Guru
+        // Wali (Wali Kelas). Tidak mengubah/menghapus logika tabel "Per Tanggal" yang
+        // sudah berjalan (processWaliReportsUI di atas) -- fungsi ini berdiri sendiri,
+        // dipanggil hanya saat radio "Per Bulan (Rekap)" aktif lalu tombol Cetak Laporan
+        // ditekan. Format kolom sesuai contoh: No, Nama, per bulan terpilih
+        // (H D T S I A PC B IT), Jumlah.
+        const bulanIndoFullWk = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+        function buildWkLaporanBulanan(classSiswa, attendanceRecords, bulanMulai, bulanSelesai, siswaName) {
+            let siswaBinaanDisplay = classSiswa || [];
+            if (siswaName && siswaName !== "Semua") {
+                siswaBinaanDisplay = siswaBinaanDisplay.filter(s => s.nama === siswaName);
+            }
+            const nisBinaanSet = new Set(siswaBinaanDisplay.map(s => String(s.nis).trim()));
+            const recordsForBinaan = (attendanceRecords || []).filter(a => nisBinaanSet.has(String(a.nis).trim()));
+
+            // Susun daftar bulan (format YYYY-MM) dari Dari Bulan s/d Sampai Bulan, urut menaik.
+            // Jika user memilih Sampai Bulan lebih awal dari Dari Bulan, otomatis ditukar.
+            let [y1, m1] = (bulanMulai || '').split('-').map(Number);
+            let [y2, m2] = (bulanSelesai || '').split('-').map(Number);
+            const now = new Date();
+            if (!y1 || !m1) { y1 = now.getFullYear(); m1 = now.getMonth() + 1; }
+            if (!y2 || !m2) { y2 = y1; m2 = m1; }
+            if (y2 < y1 || (y2 === y1 && m2 < m1)) { const ty = y1, tm = m1; y1 = y2; m1 = m2; y2 = ty; m2 = tm; }
+
+            const daftarBulan = [];
+            let cy = y1, cm = m1;
+            while (cy < y2 || (cy === y2 && cm <= m2)) {
+                daftarBulan.push(`${cy}-${String(cm).padStart(2, '0')}`);
+                cm++;
+                if (cm > 12) { cm = 1; cy++; }
+            }
+
+            const JML_KOLOM_STATUS = 9; // H, D, T, S, I, A, PC, B, IT
+            const subHeaderPerBulan = `
+                <th class="py-1 px-1 text-center text-emerald-600">H</th>
+                <th class="py-1 px-1 text-center text-blue-600">D</th>
+                <th class="py-1 px-1 text-center text-yellow-600">T</th>
+                <th class="py-1 px-1 text-center text-amber-600">S</th>
+                <th class="py-1 px-1 text-center text-purple-600">I</th>
+                <th class="py-1 px-1 text-center text-rose-600">A</th>
+                <th class="py-1 px-1 text-center text-orange-600">PC</th>
+                <th class="py-1 px-1 text-center text-red-600">B</th>
+                <th class="py-1 px-1 text-center text-cyan-600">IT</th>
+            `;
+
+            const thead = document.getElementById('wkSosenTableHead');
+            const kolomBulanHeaderAtas = daftarBulan.length
+                ? daftarBulan.map(b => {
+                      const [by, bm] = b.split('-').map(Number);
+                      return `<th class="py-1 px-1 text-center font-bold" colspan="${JML_KOLOM_STATUS}">${bulanIndoFullWk[bm - 1]} ${by}</th>`;
+                  }).join('')
+                : `<th class="py-2 text-center" colspan="${JML_KOLOM_STATUS}">-</th>`;
+            const kolomBulanSubHeader = daftarBulan.length ? daftarBulan.map(() => subHeaderPerBulan).join('') : subHeaderPerBulan;
+
+            thead.innerHTML = `
+                <tr class="border-b border-slate-100 text-slate-400 text-[10px]">
+                    <th class="py-2 w-8 sikat-sticky-no" rowspan="2">No</th>
+                    <th class="py-2 sikat-sticky-nama" rowspan="2">Nama</th>
+                    ${kolomBulanHeaderAtas}
+                    <th class="py-1 px-1 text-center font-bold" colspan="${JML_KOLOM_STATUS}">Jumlah</th>
+                </tr>
+                <tr class="border-b border-slate-100 text-slate-400 text-[9px]">
+                    ${kolomBulanSubHeader}
+                    ${subHeaderPerBulan}
+                </tr>
+            `;
+            sikatSyncTheadStickyOffset(thead);
+
+            const tbody = document.getElementById('wkSosenTable');
+            tbody.innerHTML = '';
+
+            const totalKeseluruhan = { H: 0, D: 0, T: 0, S: 0, I: 0, A: 0, PC: 0, B: 0, IT: 0 };
+
+            siswaBinaanDisplay.forEach((s, idx) => {
+                const recordsSiswaIni = recordsForBinaan.filter(r => String(r.nis).trim() === String(s.nis).trim());
+                const jumlahSiswaIni = { H: 0, D: 0, T: 0, S: 0, I: 0, A: 0, PC: 0, B: 0, IT: 0 };
+
+                const kolomPerBulanHTML = (daftarBulan.length ? daftarBulan : ['-']).map(b => {
+                    const recBulanIni = b === '-' ? [] : recordsSiswaIni.filter(r => r.tanggal && r.tanggal.slice(0, 7) === b);
+                    let jH = 0, jD = 0, jT = 0, jS = 0, jI = 0, jA = 0, jPC = 0, jB = 0, jIT = 0;
+                    recBulanIni.forEach(r => {
+                        if (r.status === 'Hadir') jH++;
+                        else if (r.status === 'Dispen') jD++;
+                        else if (r.status === 'Terlambat') jT++;
+                        else if (r.status === 'Sakit') jS++;
+                        else if (r.status === 'Izin') jI++;
+                        else if (r.status === 'Alfa') jA++;
+                        else if (r.status.startsWith('Pulang Cepat')) jPC++;
+                        else if (r.status === 'Bolos') jB++;
+                        else if (r.status === 'Izin Terlambat') jIT++;
+                    });
+                    jumlahSiswaIni.H += jH; jumlahSiswaIni.D += jD; jumlahSiswaIni.T += jT;
+                    jumlahSiswaIni.S += jS; jumlahSiswaIni.I += jI; jumlahSiswaIni.A += jA; jumlahSiswaIni.PC += jPC;
+                    jumlahSiswaIni.B += jB; jumlahSiswaIni.IT += jIT;
+                    totalKeseluruhan.H += jH; totalKeseluruhan.D += jD; totalKeseluruhan.T += jT;
+                    totalKeseluruhan.S += jS; totalKeseluruhan.I += jI; totalKeseluruhan.A += jA; totalKeseluruhan.PC += jPC;
+                    totalKeseluruhan.B += jB; totalKeseluruhan.IT += jIT;
+                    return `
+                        <td class="py-3 px-1 text-center font-extrabold text-emerald-600">${jH}</td>
+                        <td class="py-3 px-1 text-center font-extrabold text-blue-600">${jD}</td>
+                        <td class="py-3 px-1 text-center font-extrabold text-yellow-600">${jT}</td>
+                        <td class="py-3 px-1 text-center font-extrabold text-amber-600">${jS}</td>
+                        <td class="py-3 px-1 text-center font-extrabold text-purple-600">${jI}</td>
+                        <td class="py-3 px-1 text-center font-extrabold text-rose-600">${jA}</td>
+                        <td class="py-3 px-1 text-center font-extrabold text-orange-600">${jPC}</td>
+                        <td class="py-3 px-1 text-center font-extrabold text-red-600">${jB}</td>
+                        <td class="py-3 px-1 text-center font-extrabold text-cyan-600">${jIT}</td>
+                    `;
+                }).join('');
+
+                // Kolom Jumlah sekarang dipecah per status (H/D/T/S/I/A/PC/B/IT) -- jumlah
+                // masing-masing status untuk siswa ini, dijumlahkan dari SELURUH bulan
+                // terpilih (bukan lagi satu angka total gabungan semua status).
+                const kolomJumlahHTML = `
+                    <td class="py-3 px-1 text-center font-extrabold text-emerald-700 bg-slate-50">${jumlahSiswaIni.H}</td>
+                    <td class="py-3 px-1 text-center font-extrabold text-blue-700 bg-slate-50">${jumlahSiswaIni.D}</td>
+                    <td class="py-3 px-1 text-center font-extrabold text-yellow-700 bg-slate-50">${jumlahSiswaIni.T}</td>
+                    <td class="py-3 px-1 text-center font-extrabold text-amber-700 bg-slate-50">${jumlahSiswaIni.S}</td>
+                    <td class="py-3 px-1 text-center font-extrabold text-purple-700 bg-slate-50">${jumlahSiswaIni.I}</td>
+                    <td class="py-3 px-1 text-center font-extrabold text-rose-700 bg-slate-50">${jumlahSiswaIni.A}</td>
+                    <td class="py-3 px-1 text-center font-extrabold text-orange-700 bg-slate-50">${jumlahSiswaIni.PC}</td>
+                    <td class="py-3 px-1 text-center font-extrabold text-red-700 bg-slate-50">${jumlahSiswaIni.B}</td>
+                    <td class="py-3 px-1 text-center font-extrabold text-cyan-700 bg-slate-50">${jumlahSiswaIni.IT}</td>
+                `;
+
+                tbody.innerHTML += `
+                    <tr class="border-b border-slate-100 hover:bg-slate-50/50 text-xs">
+                        <td class="py-3 text-center text-slate-500 font-semibold sikat-sticky-no">${idx + 1}</td>
+                        <td class="py-3 font-semibold text-slate-800 sikat-sticky-nama">
+                            <div>${s.nama}</div>
+                            <div class="text-[9px] text-slate-400 font-medium">NIS: ${s.nis}</div>
+                        </td>
+                        ${kolomPerBulanHTML}
+                        ${kolomJumlahHTML}
+                    </tr>
+                `;
+            });
+
+            if (siswaBinaanDisplay.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${((daftarBulan.length + 1) * JML_KOLOM_STATUS) + 2}" class="py-6 text-center text-slate-400 text-xs">Tidak ada data siswa sesuai filter.</td></tr>`;
+            }
+
+            document.getElementById('wkTotalHadir').textContent = totalKeseluruhan.H;
+            document.getElementById('wkTotalTerlambat').textContent = totalKeseluruhan.T;
+            document.getElementById('wkTotalDispen').textContent = totalKeseluruhan.D;
+            document.getElementById('wkTotalSakit').textContent = totalKeseluruhan.S;
+            document.getElementById('wkTotalIzin').textContent = totalKeseluruhan.I;
+            document.getElementById('wkTotalAlfa').textContent = totalKeseluruhan.A;
+            document.getElementById('wkTotalPulangCepat').textContent = totalKeseluruhan.PC;
+            document.getElementById('wkTotalBolos').textContent = totalKeseluruhan.B;
+            document.getElementById('wkTotalIzinTerlambat').textContent = totalKeseluruhan.IT;
+
+            return daftarBulan;
+        }
+
+        // Toggle tampilan filter Tanggal <-> Bulan sesuai Mode Cetak Laporan yang dipilih.
+        // Elemen baru, berdiri sendiri, tidak mengubah listener/filter lain yang sudah berjalan.
+        function toggleWkModeCetak() {
+            const modeBulanChk = document.getElementById('wkModeCetakBulan');
+            const modeBulan = !!(modeBulanChk && modeBulanChk.checked);
+            const tanggalContainer = document.getElementById('wkFilterTanggalContainer');
+            const bulanContainer = document.getElementById('wkFilterBulanContainer');
+            if (tanggalContainer) tanggalContainer.classList.toggle('hidden', modeBulan);
+            if (bulanContainer) bulanContainer.classList.toggle('hidden', !modeBulan);
+        }
+        if (document.getElementById('wkModeCetakTanggal')) {
+            document.getElementById('wkModeCetakTanggal').addEventListener('change', toggleWkModeCetak);
+        }
+        if (document.getElementById('wkModeCetakBulan')) {
+            document.getElementById('wkModeCetakBulan').addEventListener('change', toggleWkModeCetak);
+        }
+
+        // Isi pilihan Dari Bulan / Sampai Bulan (18 bulan ke belakang s/d 3 bulan ke depan
+        // dari bulan berjalan -- cukup untuk kebutuhan rekap laporan bulanan Wali Kelas).
+        // Label hanya menampilkan nama bulan (tanpa tahun), dan bulan-bulan tahun 2025
+        // dikecualikan dari pilihan (value tetap menyimpan YYYY-MM untuk perhitungan).
+        function populateWkBulanSelects() {
+            const bulanMulaiSel = document.getElementById('wkFilterBulanMulai');
+            const bulanSelesaiSel = document.getElementById('wkFilterBulanSelesai');
+            if (!bulanMulaiSel || !bulanSelesaiSel || bulanMulaiSel.options.length > 0) return;
+
+            const now = new Date();
+            let optionsHTML = '';
+            let firstVal = '';
+            for (let i = -18; i <= 3; i++) {
+                const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+                if (d.getFullYear() === 2025) continue;
+                const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                if (!firstVal) firstVal = val;
+                optionsHTML += `<option value="${val}">${bulanIndoFullWk[d.getMonth()]}</option>`;
+            }
+            bulanMulaiSel.innerHTML = optionsHTML;
+            bulanSelesaiSel.innerHTML = optionsHTML;
+
+            const currentVal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            const defaultVal = (now.getFullYear() === 2025) ? firstVal : currentVal;
+            bulanMulaiSel.value = defaultVal;
+            bulanSelesaiSel.value = defaultVal;
+        }
+        populateWkBulanSelects();
+
+        // Fungsi bersama: menyiapkan isi tabel Rincian Siswa Kelas Binaan (mode Per Tanggal
+        // ATAU Per Bulan sesuai radio yang aktif) beserta label periode di printClassAndDate,
+        // SEBELUM benar-benar dicetak/diexport. Dipakai bersama oleh tombol Cetak, Excel,
+        // dan PDF supaya ketiganya selalu konsisten dengan filter yang sedang aktif di layar.
+        // Tidak mengubah logika processWaliReportsUI/buildWkLaporanBulanan yang sudah berjalan.
+        function siapkanWkLaporanUntukExport() {
             const pLabel = document.getElementById('printClassAndDate');
-            const startDate = document.getElementById('wkFilterStartDate').value || '-';
-            const endDate = document.getElementById('wkFilterEndDate').value || '-';
             const siswaSel = document.getElementById('wkFilterNamaSiswa').value;
-            
-            pLabel.textContent = `Kelas: ${currentUser.class_or_nip} | Rentang: ${formatTanggalIndo(startDate)} s/d ${formatTanggalIndo(endDate)} | Siswa: ${siswaSel}`;
+            const modeBulanChk = document.getElementById('wkModeCetakBulan');
+            const modeBulanAktif = !!(modeBulanChk && modeBulanChk.checked);
+
+            if (modeBulanAktif) {
+                // Mode Cetak "Per Bulan (Rekap)" -- fitur baru, tidak mengubah alur/print
+                // mode "Per Tanggal" yang sudah berjalan (blok else di bawah).
+                const bulanMulai = document.getElementById('wkFilterBulanMulai').value;
+                const bulanSelesai = document.getElementById('wkFilterBulanSelesai').value;
+                const labelBulan = (b) => { const [by, bm] = b.split('-').map(Number); return `${bulanIndoFullWk[bm - 1]} ${by}`; };
+
+                buildWkLaporanBulanan(window.wkLastClassSiswa || [], window.wkLastAttendanceRecords || [], bulanMulai, bulanSelesai, siswaSel);
+
+                pLabel.textContent = `Kelas: ${currentUser.class_or_nip} | Rekap Bulanan: ${labelBulan(bulanMulai)} s/d ${labelBulan(bulanSelesai)} | Siswa: ${siswaSel}`;
+            } else {
+                const startDate = document.getElementById('wkFilterStartDate').value || '-';
+                const endDate = document.getElementById('wkFilterEndDate').value || '-';
+                pLabel.textContent = `Kelas: ${currentUser.class_or_nip} | Rentang: ${formatTanggalIndo(startDate)} s/d ${formatTanggalIndo(endDate)} | Siswa: ${siswaSel}`;
+            }
+        }
+
+        document.getElementById('wkPrintAbsenBtn').addEventListener('click', () => {
+            siapkanWkLaporanUntukExport();
             window.print();
+        });
+
+        // Export ke Excel (.xlsx) memakai SheetJS -- membaca langsung tabel yang sedang
+        // tampil di #printArea (baik mode Per Tanggal maupun Per Bulan), jadi hasil
+        // Excel-nya selalu sama persis dengan yang terlihat/tercetak. Fitur baru,
+        // berdiri sendiri, tidak mengubah fungsi cetak yang sudah berjalan.
+        document.getElementById('wkExportExcelBtn').addEventListener('click', () => {
+            siapkanWkLaporanUntukExport();
+            const tabelEl = document.querySelector('#printArea table');
+            if (!tabelEl || typeof XLSX === 'undefined') {
+                alertModal("Gagal", "Komponen export Excel belum siap, coba lagi sesaat lagi.");
+                return;
+            }
+            const wb = XLSX.utils.table_to_book(tabelEl, { sheet: "Laporan Absensi" });
+            const namaFile = `Laporan_Absensi_${(currentUser.class_or_nip || 'Kelas').replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, namaFile);
+        });
+
+        // Export ke PDF (landscape) memakai html2pdf.js supaya seluruh kolom tabel
+        // (termasuk rekap banyak bulan) ikut termuat tanpa terpotong, tanpa perlu
+        // melalui dialog print browser. Fitur baru, berdiri sendiri.
+        document.getElementById('wkExportPdfBtn').addEventListener('click', () => {
+            siapkanWkLaporanUntukExport();
+            const areaEl = document.getElementById('printArea');
+            if (!areaEl || typeof html2pdf === 'undefined') {
+                alertModal("Gagal", "Komponen export PDF belum siap, coba lagi sesaat lagi.");
+                return;
+            }
+            const namaFile = `Laporan_Absensi_${(currentUser.class_or_nip || 'Kelas').replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+            showLoading(true);
+            html2pdf().set({
+                margin: 6,
+                filename: namaFile,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            }).from(areaEl).save().then(() => {
+                showLoading(false);
+            }).catch(() => {
+                showLoading(false);
+                alertModal("Gagal", "Terjadi kesalahan saat membuat PDF.");
+            });
         });
 
         window.toggleAccordion = function(nis) {
@@ -4319,20 +4721,20 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                             <th class="py-2 w-8 sikat-sticky-no" rowspan="2">No</th>
                             <th class="py-2 sikat-sticky-nama" rowspan="2">Nama</th>
                             <th class="py-2 text-center" colspan="${tanggalUnikWg.length || 1}">Tanggal</th>
-                            <th class="py-2 text-center" colspan="8">Jumlah</th>
+                            <th class="py-2 text-center" colspan="7">Jumlah</th>
                         </tr>
                         <tr class="border-b border-slate-100 text-slate-400 text-[9px]">
                             ${kolomTanggalHTMLWg}
                             <th class="py-1 px-1 text-center text-emerald-600">H</th>
-                            <th class="py-1 px-1 text-center text-yellow-600">T</th>
                             <th class="py-1 px-1 text-center text-blue-600">D</th>
+                            <th class="py-1 px-1 text-center text-yellow-600">T</th>
                             <th class="py-1 px-1 text-center text-amber-600">S</th>
                             <th class="py-1 px-1 text-center text-purple-600">I</th>
-                            <th class="py-1 px-1 text-center text-red-600">B</th>
+                            <th class="py-1 px-1 text-center text-rose-600">A</th>
                             <th class="py-1 px-1 text-center text-orange-600">PC</th>
-                            <th class="py-1 px-1 text-center text-cyan-600">IT</th>
                         </tr>
                     `;
+                    sikatSyncTheadStickyOffset(theadWg);
 
                     const tbodyWg = document.getElementById('wgSosenTable');
                     tbodyWg.innerHTML = '';
@@ -4344,16 +4746,15 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                             rekapPerTanggal[r.tanggal] = statusKeKodeWg(r.status);
                         });
                         // Jumlah per status untuk siswa ini, sesuai filter yang aktif
-                        let jH = 0, jT = 0, jD = 0, jS = 0, jI = 0, jB = 0, jPC = 0, jIT = 0;
+                        let jH = 0, jD = 0, jT = 0, jS = 0, jI = 0, jA = 0, jPC = 0;
                         recordsSiswaIniWg.forEach(r => {
                             if (r.status === 'Hadir') jH++;
-                            else if (r.status === 'Terlambat') jT++;
                             else if (r.status === 'Dispen') jD++;
+                            else if (r.status === 'Terlambat') jT++;
                             else if (r.status === 'Sakit') jS++;
                             else if (r.status === 'Izin') jI++;
-                            else if (r.status === 'Bolos') jB++;
+                            else if (r.status === 'Alfa') jA++;
                             else if (r.status.startsWith('Pulang Cepat')) jPC++;
-                            else if (r.status === 'Izin Terlambat') jIT++;
                         });
 
                         const selTanggalHTML = tanggalUnikWg.length
@@ -4366,13 +4767,12 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
 
                         const jumlahHTMLWg = `
                             <td class="py-3 px-1 text-center font-extrabold text-emerald-600">${jH}</td>
-                            <td class="py-3 px-1 text-center font-extrabold text-yellow-600">${jT}</td>
                             <td class="py-3 px-1 text-center font-extrabold text-blue-600">${jD}</td>
+                            <td class="py-3 px-1 text-center font-extrabold text-yellow-600">${jT}</td>
                             <td class="py-3 px-1 text-center font-extrabold text-amber-600">${jS}</td>
                             <td class="py-3 px-1 text-center font-extrabold text-purple-600">${jI}</td>
-                            <td class="py-3 px-1 text-center font-extrabold text-red-600">${jB}</td>
+                            <td class="py-3 px-1 text-center font-extrabold text-rose-600">${jA}</td>
                             <td class="py-3 px-1 text-center font-extrabold text-orange-600">${jPC}</td>
-                            <td class="py-3 px-1 text-center font-extrabold text-cyan-600">${jIT}</td>
                         `;
 
                         tbodyWg.innerHTML += `
@@ -4389,7 +4789,7 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                     });
 
                     if (siswaBinaanDisplayWg.length === 0) {
-                        tbodyWg.innerHTML = `<tr><td colspan="${(tanggalUnikWg.length || 1) + 10}" class="py-6 text-center text-slate-400 text-xs">Tidak ada data absensi sesuai filter.</td></tr>`;
+                        tbodyWg.innerHTML = `<tr><td colspan="${(tanggalUnikWg.length || 1) + 9}" class="py-6 text-center text-slate-400 text-xs">Tidak ada data absensi sesuai filter.</td></tr>`;
                     }
 
                     document.getElementById('wgTotalHadir').textContent = totalHadir;
