@@ -2010,7 +2010,56 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
         // ==========================================================================
         const APPS_SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzMVM25YJ2M2tFQJTo_X3ZdIgbK8R_-s5nUuEydUtkQt0ciFB6ZWBSV-BDeiOAnpOJX/exec";
 
+        // ==========================================================================
+        // OPTIMASI PERFORMA: cache ringan di memori browser untuk pemanggilan
+        // "get..." (baca data), supaya pindah-pindah menu dengan cepat tidak
+        // selalu memicu round-trip baru ke Apps Script kalau datanya baru saja
+        // (< BACKEND_CACHE_TTL_MS) diambil. Ini HANYA membungkus runBackend()
+        // di lapisan jaringan -- tidak mengubah cara data diproses/ditampilkan,
+        // dan semua fungsi backend (kode.gs) tetap dipanggil apa adanya.
+        //
+        // Aturan cache:
+        // - Method yang mengubah data (add/update/delete/save/...) SELALU ke
+        //   server seperti biasa, lalu membersihkan SELURUH cache supaya menu
+        //   lain yang datanya mungkin ikut berubah tidak menampilkan data basi.
+        // - authenticate & authenticateAndResolve TIDAK PERNAH di-cache (login
+        //   harus selalu diverifikasi ke server).
+        // - Method "get..." lainnya boleh dipakai ulang dari cache selama
+        //   BACKEND_CACHE_TTL_MS belum lewat.
+        // ==========================================================================
+        const _backendCache = {};
+        const BACKEND_CACHE_TTL_MS = 20000; // 20 detik
+        const MUTATING_METHODS_ = new Set([
+            'addSiswa', 'updateSiswa', 'deleteSiswa',
+            'addGuru', 'updateGuru', 'deleteGuru',
+            'saveAttendance', 'saveJurnal', 'saveClassStructure',
+            'savePenanganan', 'updatePoinKarakter'
+        ]);
+        const NO_CACHE_METHODS_ = new Set(['authenticate', 'authenticateAndResolve']);
+
         const runBackend = (methodName, args = [], onSuccess, onFailure) => {
+            const cacheKey = methodName + '::' + JSON.stringify(args);
+            const isMutating = MUTATING_METHODS_.has(methodName);
+            const isCacheable = !isMutating && !NO_CACHE_METHODS_.has(methodName);
+
+            if (isCacheable) {
+                const cached = _backendCache[cacheKey];
+                if (cached && (Date.now() - cached.ts) < BACKEND_CACHE_TTL_MS) {
+                    onSuccess(cached.data);
+                    return;
+                }
+            }
+
+            const realOnSuccess = onSuccess;
+            onSuccess = (data) => {
+                if (isMutating) {
+                    Object.keys(_backendCache).forEach(k => delete _backendCache[k]);
+                } else if (isCacheable) {
+                    _backendCache[cacheKey] = { data, ts: Date.now() };
+                }
+                realOnSuccess(data);
+            };
+
             const isRealGAS = (typeof google !== 'undefined' && google.script && google.script.run && typeof google.script.run[methodName] === 'function');
 
             if (isRealGAS) {
@@ -2458,10 +2507,22 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
             }
 
             showLoading(true);
-            runBackend('authenticate', [user, pass, currentRole], onLoginSuccess, onLoginFail);
+            if (currentRole === 'Guru Wali') {
+                // OPTIMASI PERFORMA: dulu login Guru Wali butuh 2 round-trip
+                // berurutan (authenticate lalu resolveWaliKelasStudents), yang
+                // membuat loading terasa lama. Sekarang digabung jadi 1 kali
+                // panggilan lewat authenticateAndResolve() (fungsi BARU di
+                // kode.gs) -- authenticate() untuk login Siswa di bawah tetap
+                // memakai jalur lama, tidak diubah sama sekali.
+                runBackend('authenticateAndResolve', [user, pass, currentRole], function(result) {
+                    onLoginSuccess(result.user, result.homeroomStudents);
+                }, onLoginFail);
+            } else {
+                runBackend('authenticate', [user, pass, currentRole], onLoginSuccess, onLoginFail);
+            }
         });
 
-        function onLoginSuccess(userObj) {
+        function onLoginSuccess(userObj, preloadedHomeroomStudents) {
             showLoading(false);
             currentUser = userObj;
             
@@ -2470,7 +2531,21 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                 switchScreen('siswaArea');
                 switchTab('Siswa', 'siswaBerandaTab');
                 setupSiswaDashboard();
+            } else if (preloadedHomeroomStudents !== undefined) {
+                // Hasil resolveWaliKelasStudents sudah dibawa sekaligus oleh
+                // authenticateAndResolve() di atas -- tidak perlu round-trip lagi.
+                currentUser.isActualWaliKelas = (preloadedHomeroomStudents && preloadedHomeroomStudents.length > 0);
+                renderBottomNavbar('Guru Wali');
+                switchScreen('waliArea');
+                if (currentUser.isActualWaliKelas) {
+                    switchTab('Guru Wali', 'waliBerandaTab');
+                } else {
+                    switchTab('Guru Wali', 'waliGuruWaliTab');
+                }
+                setupWaliDashboard();
             } else {
+                // Jalur cadangan (dipertahankan apa adanya) -- dipakai kalau
+                // untuk suatu alasan authenticateAndResolve tidak dipanggil.
                 showLoading(true);
                 runBackend('resolveWaliKelasStudents', [currentUser.name, currentUser.class_or_nip], function(homeroomStudents) {
                     showLoading(false);
