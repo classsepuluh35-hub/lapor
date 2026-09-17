@@ -2028,7 +2028,11 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
         //   BACKEND_CACHE_TTL_MS belum lewat.
         // ==========================================================================
         const _backendCache = {};
-        const BACKEND_CACHE_TTL_MS = 20000; // 20 detik
+        const BACKEND_CACHE_TTL_MS = 300000; // 5 menit -- naik dari 20 detik semula,
+        // karena cache SELALU dibersihkan otomatis tiap ada operasi simpan/tambah/
+        // ubah/hapus (lihat MUTATING_METHODS_ di bawah), jadi memperpanjang TTL
+        // tidak berisiko menampilkan data basi, tapi bikin pindah menu bolak-balik
+        // (walau jaraknya lebih dari 20 detik) tetap instan tanpa fetch ulang.
         const MUTATING_METHODS_ = new Set([
             'addSiswa', 'updateSiswa', 'deleteSiswa',
             'addGuru', 'updateGuru', 'deleteGuru',
@@ -2036,6 +2040,26 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
             'savePenanganan', 'updatePoinKarakter'
         ]);
         const NO_CACHE_METHODS_ = new Set(['authenticate', 'authenticateAndResolve']);
+
+        // OPTIMASI PERFORMA: ambil data di belakang layar (senyap, tanpa
+        // showLoading, tanpa menyentuh DOM) segera setelah login, supaya saat
+        // user benar-benar klik menu lain, datanya SUDAH ADA di cache di atas
+        // dan menu terbuka seketika alih-alih menunggu round-trip baru. Kalau
+        // prefetch gagal/belum selesai saat menu diklik, tidak masalah -- fungsi
+        // asli tab tersebut (loadDynamicStructure, renderWaliReports, dst) tetap
+        // berjalan seperti biasa dan melakukan fetch sendiri seperti sebelumnya.
+        function prefetchBackend(methodName, args = []) {
+            runBackend(methodName, args, function () {}, function () {});
+        }
+
+        // Menyimpan hasil yang SUDAH didapat (mis. dari authenticateAndResolve)
+        // langsung ke cache di atas dengan key yang SAMA seperti yang dipakai
+        // runBackend, supaya tab lain yang butuh data yang sama (resolveWaliKelasStudents)
+        // tidak perlu fetch ulang. Tidak mengubah data itu sendiri, hanya menaruhnya di cache.
+        function primeBackendCache(methodName, args, data) {
+            const cacheKey = methodName + '::' + JSON.stringify(args);
+            _backendCache[cacheKey] = { data, ts: Date.now() };
+        }
 
         const runBackend = (methodName, args = [], onSuccess, onFailure) => {
             const cacheKey = methodName + '::' + JSON.stringify(args);
@@ -2535,6 +2559,12 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                 // Hasil resolveWaliKelasStudents sudah dibawa sekaligus oleh
                 // authenticateAndResolve() di atas -- tidak perlu round-trip lagi.
                 currentUser.isActualWaliKelas = (preloadedHomeroomStudents && preloadedHomeroomStudents.length > 0);
+                // OPTIMASI PERFORMA: simpan hasil ini juga ke cache runBackend
+                // dengan key yang sama seperti resolveWaliKelasStudents biasa,
+                // supaya setupWaliDashboard() (yang juga memanggil
+                // resolveWaliKelasStudents lewat runBackend) langsung dapat
+                // cache-hit alih-alih fetch ulang ke server.
+                primeBackendCache('resolveWaliKelasStudents', [currentUser.name, currentUser.class_or_nip], preloadedHomeroomStudents);
                 renderBottomNavbar('Guru Wali');
                 switchScreen('waliArea');
                 if (currentUser.isActualWaliKelas) {
@@ -2611,6 +2641,12 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                 processSiswaData(classSiswa);
                 populateGuruOptions(gList);
             });
+
+            // OPTIMASI PERFORMA: siapkan lebih dulu (senyap, di belakang layar)
+            // data yang dibutuhkan menu Beranda & Struktur, supaya begitu di-klik
+            // langsung terbuka tanpa loading (lihat prefetchBackend di atas).
+            prefetchBackend('getAttendanceByClass', [currentUser.class_or_nip]);
+            prefetchBackend('getClassStructure', [currentUser.class_or_nip]);
         }
 
         function processSiswaData(classSiswa) {
@@ -3366,6 +3402,15 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                 // Guru biasa tanpa siswa asuh wali kelas (hanya memuat data bimbingan wali guru & list riwayat bimbingannya)
                 renderPenangananList();
                 switchWgSubTab(currentWgSubTab);
+
+                // OPTIMASI PERFORMA: siapkan lebih dulu (senyap) data yang
+                // dipakai sub-tab Wali Guru lainnya (Absen, Nilai, Poin) yang
+                // belum tentu langsung dibuka oleh switchWgSubTab di atas,
+                // supaya saat user klik salah satu sub-tab tersebut, sudah
+                // langsung terbuka tanpa loading.
+                prefetchBackend('getSiswaByGuruWali', [currentUser.name]);
+                prefetchBackend('getAttendanceForGuruWali', [currentUser.name]);
+                prefetchBackend('getGradesForGuruWali', [currentUser.name]);
             }
 
             // Tambahkan listener filter hanya jika tombol pencarian laporan eksis di DOM
