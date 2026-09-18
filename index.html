@@ -1319,10 +1319,16 @@
                     <div class="space-y-4">
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nama Siswa</label>
-                                <select id="psNamaSiswa" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none">
-                                    <option value="">-- Pilih Siswa --</option>
-                                </select>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase">Nama Siswa</label>
+                                    <label class="flex items-center gap-1 cursor-pointer text-[10px] font-bold text-indigo-600">
+                                        <input type="checkbox" id="psSelectAllWk" onchange="toggleSelectAllSiswa('psSelectAllWk', 'psNamaSiswaContainer')" class="rounded text-indigo-600 focus:ring-indigo-500">
+                                        Centang Semua
+                                    </label>
+                                </div>
+                                <div id="psNamaSiswaContainer" class="w-full max-h-36 overflow-y-auto bg-slate-50 border border-slate-200 rounded-xl p-2 space-y-1">
+                                    <p class="text-[10px] text-slate-400 italic px-1">Memuat siswa...</p>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-555 uppercase mb-1">Tanggal</label>
@@ -1333,7 +1339,7 @@
                         <!-- Kolom Jenis Bimbingan -->
                         <div>
                             <label class="block text-[10px] font-bold text-slate-555 uppercase mb-1">Jenis Bimbingan</label>
-                            <select id="psJenisBimbingan" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+                            <select id="psJenisBimbingan" onchange="toggleKlasikalMode('wk')" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none">
                                 <option value="Bimbingan Pribadi">Bimbingan Pribadi (Karakter & Sikap)</option>
                                 <option value="Bimbingan Belajar">Bimbingan Belajar / Akademik</option>
                                 <option value="Bimbingan Sosial">Bimbingan Sosial (Pertemanan & Lingkungan)</option>
@@ -1344,7 +1350,7 @@
                         </div>
 
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-555 uppercase mb-1">Masalah / Pelanggaran</label>
+                            <label class="block text-[10px] font-bold text-slate-555 uppercase mb-1">Masalah / Pelanggaran / Konten Pembinaan</label>
                             <textarea id="psMasalah" rows="2" placeholder="Tuliskan masalah/pelanggaran..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none"></textarea>
                         </div>
 
@@ -1367,7 +1373,7 @@
                         </div>
 
                         <!-- Pihak Terlibat Tambahan -->
-                        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
+                        <div id="pihakTerlibatWk" class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
                             <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Pihak Terlibat Tambahan</span>
                             <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs">
                                 <label class="flex items-center gap-1.5 cursor-pointer">
@@ -1390,7 +1396,7 @@
                         </div>
 
                         <!-- Area Tanda Tangan Canvas -->
-                        <div class="space-y-3">
+                        <div id="areaTtdWk" class="space-y-3">
                             <span class="text-[10px] font-bold text-slate-505 uppercase tracking-wider block">Tanda Tangan Konfirmasi</span>
                             
                             <!-- TTD Siswa (Wajib) -->
@@ -1454,10 +1460,16 @@
                     <div class="space-y-4">
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nama Siswa Bimbingan</label>
-                                <select id="psNamaSiswaWg" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none">
-                                    <option value="">-- Pilih Siswa Binaan --</option>
-                                </select>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase">Nama Siswa Bimbingan</label>
+                                    <label class="flex items-center gap-1 cursor-pointer text-[10px] font-bold text-emerald-600">
+                                        <input type="checkbox" id="psSelectAllWg" onchange="toggleSelectAllSiswa('psSelectAllWg', 'psNamaSiswaContainerWg')" class="rounded text-emerald-600 focus:ring-emerald-500">
+                                        Centang Semua
+                                    </label>
+                                </div>
+                                <div id="psNamaSiswaContainerWg" class="w-full max-h-36 overflow-y-auto bg-slate-50 border border-slate-200 rounded-xl p-2 space-y-1">
+                                    <p class="text-[10px] text-slate-400 italic px-1">Memuat siswa...</p>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-555 uppercase mb-1">Tanggal</label>
@@ -1468,7 +1480,7 @@
                         <!-- Kolom Jenis Bimbingan -->
                         <div>
                             <label class="block text-[10px] font-bold text-slate-555 uppercase mb-1">Jenis Bimbingan</label>
-                            <select id="psJenisBimbinganWg" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+                            <select id="psJenisBimbinganWg" onchange="toggleKlasikalMode('wg')" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none">
                                 <option value="Bimbingan Pribadi">Bimbingan Pribadi (Karakter & Sikap)</option>
                                 <option value="Bimbingan Belajar">Bimbingan Belajar / Akademik</option>
                                 <option value="Bimbingan Sosial">Bimbingan Sosial (Pertemanan & Lingkungan)</option>
@@ -1479,7 +1491,7 @@
                         </div>
 
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-555 uppercase mb-1">Masalah / Pelanggaran</label>
+                            <label class="block text-[10px] font-bold text-slate-555 uppercase mb-1">Masalah / Pelanggaran / Konten Pembinaan</label>
                             <textarea id="psMasalahWg" rows="2" placeholder="Tuliskan masalah/pelanggaran siswa binaan..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-indigo-500 text-xs focus:outline-none"></textarea>
                         </div>
 
@@ -1502,7 +1514,7 @@
                         </div>
 
                         <!-- Pihak Terlibat Tambahan -->
-                        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
+                        <div id="pihakTerlibatWg" class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
                             <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Pihak Terlibat Tambahan</span>
                             <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs">
                                 <label class="flex items-center gap-1.5 cursor-pointer">
@@ -1525,7 +1537,7 @@
                         </div>
 
                         <!-- Area Tanda Tangan Canvas -->
-                        <div class="space-y-3">
+                        <div id="areaTtdWg" class="space-y-3">
                             <span class="text-[10px] font-bold text-slate-505 uppercase tracking-wider block">Tanda Tangan Konfirmasi</span>
                             
                             <!-- TTD Siswa (Wajib) -->
@@ -1580,10 +1592,28 @@
                     </div>
                 </div>
 
-                <!-- DAFTAR PENANGANAN UTAMA (RIWAYAT GABUNGAN) -->
-                <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+                <!-- DAFTAR PENANGANAN UTAMA (RIWAYAT GABUNGAN) - disembunyikan atas permintaan, digantikan Riwayat Binaan Wali Kelas/Wali Guru di bawah -->
+                <div class="hidden bg-white p-5 rounded-3xl shadow-sm border border-slate-100 space-y-4">
                     <h4 class="font-extrabold text-xs text-slate-800 uppercase tracking-wide">Daftar Kasus Selesai Ditangani</h4>
                     <div class="space-y-4 max-h-[300px] overflow-y-auto pr-1" id="penangananList">
+                    </div>
+                </div>
+
+                <!-- RIWAYAT BINAAN WALI KELAS (data dari Form Wali Kelas / Siswa Kelas) -->
+                <div id="cardRiwayatBinaanWk" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+                    <h4 class="font-extrabold text-xs text-slate-800 uppercase tracking-wide">
+                        <i class="fa-solid fa-users-rectangle text-indigo-600 mr-1"></i> Riwayat Binaan Wali Kelas
+                    </h4>
+                    <div class="space-y-4 max-h-[300px] overflow-y-auto pr-1" id="riwayatBinaanWkList">
+                    </div>
+                </div>
+
+                <!-- RIWAYAT BINAAN WALI GURU (data dari Form Wali Guru / Siswa Bimbingan) -->
+                <div id="cardRiwayatBinaanWg" class="hidden bg-white p-5 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+                    <h4 class="font-extrabold text-xs text-slate-800 uppercase tracking-wide">
+                        <i class="fa-solid fa-user-shield text-emerald-600 mr-1"></i> Riwayat Binaan Wali Guru
+                    </h4>
+                    <div class="space-y-4 max-h-[300px] overflow-y-auto pr-1" id="riwayatBinaanWgList">
                     </div>
                 </div>
             </div>
@@ -2477,6 +2507,38 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
             }
         }
 
+        // --- MODE BIMBINGAN KLASIKAL (sembunyikan Pihak Terlibat Tambahan + seluruh Tanda Tangan) ---
+        function isKlasikalMode(prefix) {
+            const sel = document.getElementById(prefix === 'wk' ? 'psJenisBimbingan' : 'psJenisBimbinganWg');
+            return !!sel && sel.value === 'Bimbingan Klasikal';
+        }
+
+        function toggleKlasikalMode(prefix) {
+            const suffix = prefix === 'wk' ? 'Wk' : 'Wg';
+            const pihakEl = document.getElementById('pihakTerlibat' + suffix);
+            const ttdEl = document.getElementById('areaTtd' + suffix);
+            const klasikal = isKlasikalMode(prefix);
+
+            if (klasikal) {
+                if (pihakEl) pihakEl.classList.add('hidden');
+                if (ttdEl) ttdEl.classList.add('hidden');
+
+                // Bersihkan centang pihak terlibat + kosongkan seluruh canvas tanda tangan
+                ['Wali', 'Bk', 'GuruWali', 'Ortu'].forEach(type => {
+                    const cb = document.getElementById('check' + type + suffix);
+                    if (cb) cb.checked = false;
+                    toggleTtdContainer(prefix, type);
+                });
+                ['canvasTtdSiswa' + suffix, 'canvasTtdWali' + suffix, 'canvasTtdBk' + suffix, 'canvasTtdGuruWali' + suffix, 'canvasTtdOrtu' + suffix].forEach(id => {
+                    const canvas = document.getElementById(id);
+                    if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+                });
+            } else {
+                if (pihakEl) pihakEl.classList.remove('hidden');
+                if (ttdEl) ttdEl.classList.remove('hidden');
+            }
+        }
+
         // --- FILE UPLOAD TO BASE64 ---
         function handleFotoUpload(event, rolePrefix) {
             const file = event.target.files[0];
@@ -3342,6 +3404,7 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                 if (internalTabsContainer) internalTabsContainer.classList.add('hidden');
                 if (panelWk) panelWk.classList.add('hidden');
                 if (panelWg) panelWg.classList.remove('hidden');
+                syncRiwayatBinaanVisibility();
                 
                 // Muat langsung dropdown binaan asuhan guru wali
                 loadWaliGuruPenangananDropdown();
@@ -3369,13 +3432,7 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                 showLoading(true);
                 runBackend('resolveWaliKelasStudents', [currentUser.name, currentUser.class_or_nip], function(classSiswa) {
                     showLoading(false);
-                    const psSelect = document.getElementById('psNamaSiswa');
-                    if (psSelect) {
-                        psSelect.innerHTML = '<option value="">-- Pilih Siswa --</option>';
-                        classSiswa.forEach(s => {
-                            psSelect.innerHTML += `<option value="${s.nama}" data-nis="${s.nis}">${s.nama}</option>`;
-                        });
-                    }
+                    renderSiswaCheckboxList('psNamaSiswaContainer', classSiswa, 'Belum ada siswa binaan');
                     
                     const wkFilterSiswaSelect = document.getElementById('wkFilterNamaSiswa');
                     if (wkFilterSiswaSelect) {
@@ -5187,6 +5244,7 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                 btnTabPenangananWg.className = "flex-1 py-2 text-center text-xs font-bold rounded-xl text-slate-600 hover:text-slate-800 transition-all";
                 panelPenangananWk.classList.remove('hidden');
                 panelPenangananWg.classList.add('hidden');
+                syncRiwayatBinaanVisibility();
                 setTimeout(initSignaturesForWk, 100);
             });
         }
@@ -5197,64 +5255,74 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                 btnTabPenangananWk.className = "flex-1 py-2 text-center text-xs font-bold rounded-xl text-slate-600 hover:text-slate-800 transition-all";
                 panelPenangananWg.classList.remove('hidden');
                 panelPenangananWk.classList.add('hidden');
+                syncRiwayatBinaanVisibility();
                 loadWaliGuruPenangananDropdown();
                 setTimeout(initSignaturesForWg, 100);
             });
         }
 
+        // Render daftar siswa sebagai checkbox (menggantikan dropdown <select> lama) di dalam container
+        function renderSiswaCheckboxList(containerId, students, emptyText) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            if (!students || students.length === 0) {
+                container.innerHTML = `<p class="text-[10px] text-slate-400 italic px-1">${emptyText || 'Tidak ada siswa tersedia'}</p>`;
+                return;
+            }
+            container.innerHTML = students.map(s => `
+                <label class="flex items-center gap-2 px-1.5 py-1 rounded-lg hover:bg-white cursor-pointer text-xs">
+                    <input type="checkbox" class="ps-siswa-checkbox rounded text-indigo-600 focus:ring-indigo-500" value="${s.nama}" data-nis="${s.nis}">
+                    <span>${s.nama}</span>
+                </label>
+            `).join('');
+        }
+
+        // Ambil siswa yang dicentang saja
+        function getSelectedSiswaFromContainer(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return [];
+            return Array.from(container.querySelectorAll('.ps-siswa-checkbox:checked')).map(cb => ({ nama: cb.value, nis: cb.getAttribute('data-nis') || '' }));
+        }
+
+        // Ambil seluruh siswa yang tersedia di container (dipakai untuk mode Bimbingan Klasikal)
+        function getAllSiswaFromContainer(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return [];
+            return Array.from(container.querySelectorAll('.ps-siswa-checkbox')).map(cb => ({ nama: cb.value, nis: cb.getAttribute('data-nis') || '' }));
+        }
+
         function loadWaliKelasPenangananDropdown() {
-            const selectWk = document.getElementById('psNamaSiswa');
-            if (selectWk) {
-                selectWk.innerHTML = '<option value="">-- Pilih Siswa --</option>';
+            const containerWk = document.getElementById('psNamaSiswaContainer');
+            if (containerWk) {
+                containerWk.innerHTML = '<p class="text-[10px] text-slate-400 italic px-1">Memuat siswa...</p>';
                 runBackend('resolveWaliKelasStudents', [currentUser.name, currentUser.class_or_nip], function(classSiswa) {
-                    selectWk.innerHTML = '<option value="">-- Pilih Siswa --</option>';
-                    classSiswa.forEach(s => {
-                        selectWk.innerHTML += `<option value="${s.nama}" data-nis="${s.nis}">${s.nama}</option>`;
-                    });
+                    renderSiswaCheckboxList('psNamaSiswaContainer', classSiswa, 'Belum ada siswa binaan');
                     document.getElementById('psTanggal').value = new Date().toISOString().split('T')[0];
+                    const psSelectAllWk = document.getElementById('psSelectAllWk');
+                    if (psSelectAllWk) psSelectAllWk.checked = false;
                 });
             }
         }
 
         function loadWaliGuruPenangananDropdown() {
-            const selectWg = document.getElementById('psNamaSiswaWg');
-            if (selectWg) {
-                selectWg.innerHTML = '<option value="">-- Pilih Siswa Binaan --</option>';
+            const containerWg = document.getElementById('psNamaSiswaContainerWg');
+            if (containerWg) {
+                containerWg.innerHTML = '<p class="text-[10px] text-slate-400 italic px-1">Memuat siswa...</p>';
                 runBackend('getSiswaByGuruWali', [currentUser.name], function(filteredSiswa) {
-                    selectWg.innerHTML = '<option value="">-- Pilih Siswa Binaan --</option>';
-                    filteredSiswa.forEach(s => {
-                        selectWg.innerHTML += `<option value="${s.nama}" data-nis="${s.nis}">${s.nama}</option>`;
-                    });
+                    renderSiswaCheckboxList('psNamaSiswaContainerWg', filteredSiswa, 'Belum ada siswa binaan');
                     document.getElementById('psTanggalWg').value = new Date().toISOString().split('T')[0];
+                    const psSelectAllWg = document.getElementById('psSelectAllWg');
+                    if (psSelectAllWg) psSelectAllWg.checked = false;
                 });
             }
         }
 
-        // Toggle mode "Bimbingan Klasikal": nama siswa binaan otomatis masuk semua, tidak perlu pilih satu-satu
-        function getKlasikalStudents(selectEl) {
-            const list = [];
-            Array.from(selectEl.options).forEach(opt => {
-                if (opt.value) list.push({ nama: opt.value, nis: opt.getAttribute('data-nis') || '' });
-            });
-            return list;
-        }
-
-        function toggleNamaSiswaKlasikal(jenisSelectId, namaSelectId) {
-            const jenisSelect = document.getElementById(jenisSelectId);
-            const namaSelect = document.getElementById(namaSelectId);
-            if (!jenisSelect || !namaSelect) return;
-            const isKlasikal = jenisSelect.value === 'Bimbingan Klasikal';
-            namaSelect.disabled = isKlasikal;
-            namaSelect.classList.toggle('opacity-50', isKlasikal);
-        }
-
-        const psJenisBimbinganEl = document.getElementById('psJenisBimbingan');
-        if (psJenisBimbinganEl) {
-            psJenisBimbinganEl.addEventListener('change', () => toggleNamaSiswaKlasikal('psJenisBimbingan', 'psNamaSiswa'));
-        }
-        const psJenisBimbinganWgEl = document.getElementById('psJenisBimbinganWg');
-        if (psJenisBimbinganWgEl) {
-            psJenisBimbinganWgEl.addEventListener('change', () => toggleNamaSiswaKlasikal('psJenisBimbinganWg', 'psNamaSiswaWg'));
+        // Centang/Uncentang semua siswa dalam container - berlaku untuk semua jenis bimbingan (termasuk Bimbingan Klasikal)
+        function toggleSelectAllSiswa(selectAllCheckboxId, containerId) {
+            const selectAllCb = document.getElementById(selectAllCheckboxId);
+            const container = document.getElementById(containerId);
+            if (!selectAllCb || !container) return;
+            container.querySelectorAll('.ps-siswa-checkbox').forEach(cb => cb.checked = selectAllCb.checked);
         }
 
         // Simpan berkas penanganan secara berantai (sequential) untuk beberapa siswa sekaligus (mode Bimbingan Klasikal)
@@ -5279,23 +5347,18 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
 
         // Submit Penanganan Siswa (Wali Kelas Form)
         document.getElementById('submitPenangananBtn').addEventListener('click', () => {
-            const select = document.getElementById('psNamaSiswa');
             const bimbingan = document.getElementById('psJenisBimbingan').value;
-            const isKlasikal = bimbingan === 'Bimbingan Klasikal';
-            const nama = select.value;
-            const selectedOpt = select.options[select.selectedIndex];
-            const nis = selectedOpt ? (selectedOpt.getAttribute('data-nis') || '') : '';
+            const students = getSelectedSiswaFromContainer('psNamaSiswaContainer');
             const tgl = document.getElementById('psTanggal').value;
             const masalah = document.getElementById('psMasalah').value;
             const tindakLanjut = document.getElementById('psTindakLanjut').value;
 
-            if (isKlasikal) {
-                if (!masalah || !tindakLanjut) {
-                    alertModal("Peringatan", "Harap isi Masalah serta Tindak Lanjut.");
-                    return;
-                }
-            } else if (!nama || !masalah || !tindakLanjut) {
-                alertModal("Peringatan", "Harap isi Nama Siswa, Masalah, serta Tindak Lanjut.");
+            if (!masalah || !tindakLanjut) {
+                alertModal("Peringatan", "Harap isi Masalah serta Tindak Lanjut.");
+                return;
+            }
+            if (students.length === 0) {
+                alertModal("Peringatan", "Harap centang minimal satu Nama Siswa.");
                 return;
             }
 
@@ -5304,30 +5367,34 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                 return;
             }
 
-            if (isCanvasBlank('canvasTtdSiswaWk')) {
+            const isKlasikalWk = (bimbingan === 'Bimbingan Klasikal');
+
+            if (!isKlasikalWk && isCanvasBlank('canvasTtdSiswaWk')) {
                 alertModal("Tanda Tangan Diperlukan", "Siswa harus menandatangani berkas ini!");
                 return;
             }
             
-            if (document.getElementById('checkWaliWk').checked && isCanvasBlank('canvasTtdWaliWk')) {
+            if (!isKlasikalWk && document.getElementById('checkWaliWk').checked && isCanvasBlank('canvasTtdWaliWk')) {
                 alertModal("Tanda Tangan Diperlukan", "Wali Kelas dicentang, harap isi tanda tangan Wali Kelas!");
                 return;
             }
 
-            if (document.getElementById('checkBkWk').checked && isCanvasBlank('canvasTtdBkWk')) {
+            if (!isKlasikalWk && document.getElementById('checkBkWk').checked && isCanvasBlank('canvasTtdBkWk')) {
                 alertModal("Tanda Tangan Diperlukan", "Guru BK dicentang, harap isi tanda tangan Guru BK!");
                 return;
             }
-            if (document.getElementById('checkGuruWaliWk').checked && isCanvasBlank('canvasTtdGuruWaliWk')) {
+            if (!isKlasikalWk && document.getElementById('checkGuruWaliWk').checked && isCanvasBlank('canvasTtdGuruWaliWk')) {
                 alertModal("Tanda Tangan Diperlukan", "Guru Wali dicentang, harap isi tanda tangan Guru Wali!");
                 return;
             }
-            if (document.getElementById('checkOrtuWk').checked && isCanvasBlank('canvasTtdOrtuWk')) {
+            if (!isKlasikalWk && document.getElementById('checkOrtuWk').checked && isCanvasBlank('canvasTtdOrtuWk')) {
                 alertModal("Tanda Tangan Diperlukan", "Orang Tua/Wali dicentang, harap isi tanda tangan Orang Tua/Wali!");
                 return;
             }
 
-            const ttdObj = {
+            const ttdObj = isKlasikalWk ? {
+                siswa: null, wali: null, bk: null, guruWali: null, ortu: null
+            } : {
                 siswa: document.getElementById('canvasTtdSiswaWk').toDataURL(),
                 wali: document.getElementById('checkWaliWk').checked ? document.getElementById('canvasTtdWaliWk').toDataURL() : null,
                 bk: document.getElementById('checkBkWk').checked ? document.getElementById('canvasTtdBkWk').toDataURL() : null,
@@ -5347,49 +5414,31 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
 
             showLoading(true);
 
-            if (isKlasikal) {
-                const students = getKlasikalStudents(select);
-                if (students.length === 0) {
-                    showLoading(false);
-                    alertModal("Peringatan", "Tidak ada siswa binaan yang tersedia untuk Bimbingan Klasikal.");
-                    return;
-                }
-                saveKlasikalBatch(students, baseData, function() {
-                    showLoading(false);
-                    alertModal("Sukses", "Kasus Bimbingan Klasikal (Wali Kelas) sukses disimpan untuk " + students.length + " siswa!");
-                    resetPenangananForm();
-                    renderPenangananList();
-                });
-            } else {
-                const dataBaru = Object.assign({}, baseData, { id: "CASE-" + Date.now(), nis: nis, nama: nama });
-                runBackend('savePenanganan', [dataBaru], function() {
-                    showLoading(false);
-                    alertModal("Sukses", "Kasus penanganan siswa (Wali Kelas) sukses disimpan!");
-                    resetPenangananForm();
-                    renderPenangananList();
-                });
-            }
+            saveKlasikalBatch(students, baseData, function() {
+                showLoading(false);
+                const pesanSukses = students.length > 1
+                    ? "Kasus penanganan siswa (Wali Kelas) sukses disimpan untuk " + students.length + " siswa!"
+                    : "Kasus penanganan siswa (Wali Kelas) sukses disimpan!";
+                alertModal("Sukses", pesanSukses);
+                resetPenangananForm();
+                renderPenangananList();
+            });
         });
 
         // Submit Penanganan Siswa (Wali Guru Form)
         document.getElementById('submitPenangananBtnWg').addEventListener('click', () => {
-            const select = document.getElementById('psNamaSiswaWg');
             const bimbingan = document.getElementById('psJenisBimbinganWg').value;
-            const isKlasikal = bimbingan === 'Bimbingan Klasikal';
-            const nama = select.value;
-            const selectedOpt = select.options[select.selectedIndex];
-            const nis = selectedOpt ? (selectedOpt.getAttribute('data-nis') || '') : '';
+            const students = getSelectedSiswaFromContainer('psNamaSiswaContainerWg');
             const tgl = document.getElementById('psTanggalWg').value;
             const masalah = document.getElementById('psMasalahWg').value;
             const tindakLanjut = document.getElementById('psTindakLanjutWg').value;
 
-            if (isKlasikal) {
-                if (!masalah || !tindakLanjut) {
-                    alertModal("Peringatan", "Harap isi Masalah serta Tindak Lanjut.");
-                    return;
-                }
-            } else if (!nama || !masalah || !tindakLanjut) {
-                alertModal("Peringatan", "Harap isi Nama Siswa, Masalah, serta Tindak Lanjut.");
+            if (!masalah || !tindakLanjut) {
+                alertModal("Peringatan", "Harap isi Masalah serta Tindak Lanjut.");
+                return;
+            }
+            if (students.length === 0) {
+                alertModal("Peringatan", "Harap centang minimal satu Nama Siswa.");
                 return;
             }
 
@@ -5398,29 +5447,33 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                 return;
             }
 
-            if (isCanvasBlank('canvasTtdSiswaWg')) {
+            const isKlasikalWg = (bimbingan === 'Bimbingan Klasikal');
+
+            if (!isKlasikalWg && isCanvasBlank('canvasTtdSiswaWg')) {
                 alertModal("Tanda Tangan Diperlukan", "Siswa harus menandatangani berkas ini!");
                 return;
             }
-            if (document.getElementById('checkWaliWg').checked && isCanvasBlank('canvasTtdWaliWg')) {
+            if (!isKlasikalWg && document.getElementById('checkWaliWg').checked && isCanvasBlank('canvasTtdWaliWg')) {
                 alertModal("Tanda Tangan Diperlukan", "Wali Kelas dicentang, harap isi tanda tangan Wali Kelas!");
                 return;
             }
 
-            if (document.getElementById('checkBkWg').checked && isCanvasBlank('canvasTtdBkWg')) {
+            if (!isKlasikalWg && document.getElementById('checkBkWg').checked && isCanvasBlank('canvasTtdBkWg')) {
                 alertModal("Tanda Tangan Diperlukan", "Guru BK dicentang, harap isi tanda tangan Guru BK!");
                 return;
             }
-            if (document.getElementById('checkGuruWaliWg').checked && isCanvasBlank('canvasTtdGuruWaliWg')) {
+            if (!isKlasikalWg && document.getElementById('checkGuruWaliWg').checked && isCanvasBlank('canvasTtdGuruWaliWg')) {
                 alertModal("Tanda Tangan Diperlukan", "Guru Wali dicentang, harap isi tanda tangan Guru Wali!");
                 return;
             }
-            if (document.getElementById('checkOrtuWg').checked && isCanvasBlank('canvasTtdOrtuWg')) {
+            if (!isKlasikalWg && document.getElementById('checkOrtuWg').checked && isCanvasBlank('canvasTtdOrtuWg')) {
                 alertModal("Tanda Tangan Diperlukan", "Orang Tua/Wali dicentang, harap isi tanda tangan Orang Tua/Wali!");
                 return;
             }
 
-            const ttdObj = {
+            const ttdObj = isKlasikalWg ? {
+                siswa: null, wali: null, bk: null, guruWali: null, ortu: null
+            } : {
                 siswa: document.getElementById('canvasTtdSiswaWg').toDataURL(),
                 wali: document.getElementById('checkWaliWg').checked ? document.getElementById('canvasTtdWaliWg').toDataURL() : null,
                 bk: document.getElementById('checkBkWg').checked ? document.getElementById('canvasTtdBkWg').toDataURL() : null,
@@ -5440,32 +5493,21 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
 
             showLoading(true);
 
-            if (isKlasikal) {
-                const students = getKlasikalStudents(select);
-                if (students.length === 0) {
-                    showLoading(false);
-                    alertModal("Peringatan", "Tidak ada siswa binaan yang tersedia untuk Bimbingan Klasikal.");
-                    return;
-                }
-                saveKlasikalBatch(students, baseData, function() {
-                    showLoading(false);
-                    alertModal("Sukses", "Kasus Bimbingan Klasikal (Wali Guru) sukses disimpan untuk " + students.length + " siswa!");
-                    resetPenangananFormWg();
-                    renderPenangananList();
-                });
-            } else {
-                const dataBaru = Object.assign({}, baseData, { id: "CASE-" + Date.now(), nis: nis, nama: nama });
-                runBackend('savePenanganan', [dataBaru], function() {
-                    showLoading(false);
-                    alertModal("Sukses", "Kasus penanganan siswa (Wali Guru) sukses disimpan!");
-                    resetPenangananFormWg();
-                    renderPenangananList();
-                });
-            }
+            saveKlasikalBatch(students, baseData, function() {
+                showLoading(false);
+                const pesanSukses = students.length > 1
+                    ? "Kasus penanganan siswa (Wali Guru) sukses disimpan untuk " + students.length + " siswa!"
+                    : "Kasus penanganan siswa (Wali Guru) sukses disimpan!";
+                alertModal("Sukses", pesanSukses);
+                resetPenangananFormWg();
+                renderPenangananList();
+            });
         });
 
         function resetPenangananForm() {
-            document.getElementById('psNamaSiswa').value = '';
+            document.querySelectorAll('#psNamaSiswaContainer .ps-siswa-checkbox').forEach(cb => cb.checked = false);
+            const psSelectAllWk = document.getElementById('psSelectAllWk');
+            if (psSelectAllWk) psSelectAllWk.checked = false;
             document.getElementById('psMasalah').value = '';
             document.getElementById('psTindakLanjut').value = '';
             document.getElementById('psFotoUpload').value = '';
@@ -5487,10 +5529,13 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
             toggleTtdContainer('wk', 'Bk');
             toggleTtdContainer('wk', 'GuruWali');
             toggleTtdContainer('wk', 'Ortu');
+            toggleKlasikalMode('wk');
         }
 
         function resetPenangananFormWg() {
-            document.getElementById('psNamaSiswaWg').value = '';
+            document.querySelectorAll('#psNamaSiswaContainerWg .ps-siswa-checkbox').forEach(cb => cb.checked = false);
+            const psSelectAllWg = document.getElementById('psSelectAllWg');
+            if (psSelectAllWg) psSelectAllWg.checked = false;
             document.getElementById('psMasalahWg').value = '';
             document.getElementById('psTindakLanjutWg').value = '';
             document.getElementById('psFotoUploadWg').value = '';
@@ -5512,9 +5557,11 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
             toggleTtdContainer('wg', 'Bk');
             toggleTtdContainer('wg', 'GuruWali');
             toggleTtdContainer('wg', 'Ortu');
+            toggleKlasikalMode('wg');
         }
 
         function renderPenangananList() {
+            renderRiwayatBinaanLists();
             const container = document.getElementById('penangananList');
             container.innerHTML = '';
 
@@ -5592,6 +5639,119 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                             </div>
                         </div>
                     `;
+                });
+            });
+        }
+
+        // --- RIWAYAT BINAAN (WALI KELAS & WALI GURU) ---
+        // Riwayat yang tampil mengikuti tab aktif: tab Binaan Wali Kelas hanya
+        // menampilkan Riwayat Binaan Wali Kelas, tab Binaan Wali Guru sebaliknya.
+        function syncRiwayatBinaanVisibility() {
+            const cardWk = document.getElementById('cardRiwayatBinaanWk');
+            const cardWg = document.getElementById('cardRiwayatBinaanWg');
+            const panelWg = document.getElementById('panelPenangananWg');
+            if (!cardWk || !cardWg) return;
+
+            const modeWg = !!panelWg && !panelWg.classList.contains('hidden');
+            cardWk.classList.toggle('hidden', modeWg);
+            cardWg.classList.toggle('hidden', !modeWg);
+        }
+
+        // Kartu riwayat untuk satu berkas penanganan (dipakai dua daftar riwayat di bawah).
+        function buildRiwayatBinaanCard(item) {
+            const isWg = item.status === 'Wali Guru';
+            const labelColor = isWg ? 'bg-emerald-50 text-emerald-700' : 'bg-indigo-50 text-indigo-700';
+            const typeLabel = isWg ? 'Binaan Wali Guru' : 'Binaan Wali Kelas';
+            const jenisBimbingan = item.jenis_bimbingan || "Konseling Umum";
+
+            let ttdObj = {};
+            try {
+                if (item.ttd) ttdObj = JSON.parse(item.ttd);
+            } catch(e) {}
+
+            const ttdCard = (label, src) => src ? `
+                <div class="flex flex-col items-center border border-slate-100 p-1 rounded-lg">
+                    <span>${label}</span>
+                    <img src="${src}" class="h-10 object-contain mt-1">
+                </div>
+            ` : '';
+
+            const ttdHtml = [
+                ttdCard('Siswa', ttdObj.siswa),
+                ttdCard('Wali Kelas', ttdObj.wali),
+                ttdCard('Guru BK', ttdObj.bk),
+                ttdCard('Guru Wali', ttdObj.guruWali),
+                ttdCard('Orang Tua', ttdObj.ortu)
+            ].join('');
+
+            return `
+                <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3.5 text-xs">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h5 class="font-bold text-slate-900 text-sm">${item.nama}</h5>
+                            <p class="text-[9px] text-slate-400 font-bold uppercase">Tanggal: ${item.tanggal} | NIS: ${item.nis}</p>
+                        </div>
+                        <span class="px-2.5 py-1 ${labelColor} font-extrabold text-[9px] rounded-full uppercase shadow-sm">${typeLabel}</span>
+                    </div>
+                    <div class="text-[11px] text-slate-655 bg-white p-3 rounded-xl border border-slate-200 space-y-1.5 leading-relaxed">
+                        <p><b class="text-indigo-600 block text-[9px] uppercase tracking-wide">Kategori Bimbingan:</b> ${jenisBimbingan}</p>
+                        <p><b class="text-slate-800 block text-[9px] uppercase tracking-wide">Uraian Kasus:</b> ${item.masalah}</p>
+                        <p><b class="text-slate-800 block text-[9px] uppercase tracking-wide">Tindak Lanjut / Solusi:</b> ${item.tindak_lanjut}</p>
+                    </div>
+                    ${item.foto && item.foto !== 'Tidak ada bukti' && item.foto !== 'Tidak ada foto' ? `
+                        <div class="space-y-1">
+                            <span class="text-[8px] font-extrabold text-slate-400 uppercase tracking-wider block">Foto Bukti Kegiatan</span>
+                            <img class="w-full rounded-xl aspect-video object-cover border border-slate-200" src="${item.foto}" alt="Bukti Penanganan">
+                        </div>
+                    ` : ''}
+                    ${ttdHtml ? `
+                        <div class="space-y-1.5">
+                            <span class="text-[8px] font-extrabold text-slate-400 uppercase tracking-wider block">Dokumentasi Tanda Tangan</span>
+                            <div class="grid grid-cols-3 gap-1 bg-white p-2 rounded-xl border border-slate-200 text-center text-[9px] font-bold text-slate-500">
+                                ${ttdHtml}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // Riwayat Binaan Wali Kelas diambil dari berkas hasil Form Wali Kelas (status "Wali Kelas"),
+        // Riwayat Binaan Wali Guru dari Form Wali Guru (status "Wali Guru").
+        function renderRiwayatBinaanLists() {
+            const containerWk = document.getElementById('riwayatBinaanWkList');
+            const containerWg = document.getElementById('riwayatBinaanWgList');
+            if (!containerWk && !containerWg) return;
+
+            if (containerWk) containerWk.innerHTML = '<p class="text-[11px] text-slate-400 italic text-center py-4">Memuat riwayat...</p>';
+            if (containerWg) containerWg.innerHTML = '<p class="text-[11px] text-slate-400 italic text-center py-4">Memuat riwayat...</p>';
+
+            // Ambil roster siswa binaan guru yang sedang login, supaya riwayat yang
+            // ditampilkan hanya milik siswa binaannya sendiri (bukan siswa guru lain).
+            runBackend('resolveWaliKelasStudents', [currentUser.name, currentUser.class_or_nip], function(siswaWaliKelas) {
+                const nisWaliKelasSet = new Set((siswaWaliKelas || []).map(s => String(s.nis).trim()));
+
+                runBackend('getSiswaByGuruWali', [currentUser.name], function(siswaGuruWali) {
+                    const nisGuruWaliSet = new Set((siswaGuruWali || []).map(s => String(s.nis).trim()));
+
+                    runBackend('getPenangananList', [], function(list) {
+                        const data = list || [];
+                        const isiDaftar = (container, items, pesanKosong) => {
+                            if (!container) return;
+                            if (items.length === 0) {
+                                container.innerHTML = `<p class="text-[11px] text-slate-400 italic text-center py-4">${pesanKosong}</p>`;
+                                return;
+                            }
+                            container.innerHTML = items.map(buildRiwayatBinaanCard).join('');
+                        };
+
+                        const riwayatWk = data.filter(i => i.status !== 'Wali Guru' && nisWaliKelasSet.has(String(i.nis).trim()));
+                        const riwayatWg = data.filter(i => i.status === 'Wali Guru' && nisGuruWaliSet.has(String(i.nis).trim()));
+
+                        isiDaftar(containerWk, riwayatWk, 'Belum ada riwayat binaan wali kelas.');
+                        isiDaftar(containerWg, riwayatWg, 'Belum ada riwayat binaan wali guru.');
+                        syncRiwayatBinaanVisibility();
+                    });
                 });
             });
         }
