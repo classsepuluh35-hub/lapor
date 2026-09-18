@@ -1339,6 +1339,7 @@
                                 <option value="Bimbingan Sosial">Bimbingan Sosial (Pertemanan & Lingkungan)</option>
                                 <option value="Bimbingan Karir">Bimbingan Karir / Minat Bakat</option>
                                 <option value="Disiplin">Pelanggaran Kedisiplinan</option>
+                                <option value="Bimbingan Klasikal">Bimbingan Klasikal</option>
                             </select>
                         </div>
 
@@ -1473,6 +1474,7 @@
                                 <option value="Bimbingan Sosial">Bimbingan Sosial (Pertemanan & Lingkungan)</option>
                                 <option value="Bimbingan Karir">Bimbingan Karir / Minat Bakat</option>
                                 <option value="Disiplin">Pelanggaran Kedisiplinan</option>
+                                <option value="Bimbingan Klasikal">Bimbingan Klasikal</option>
                             </select>
                         </div>
 
@@ -5228,18 +5230,71 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
             }
         }
 
+        // Toggle mode "Bimbingan Klasikal": nama siswa binaan otomatis masuk semua, tidak perlu pilih satu-satu
+        function getKlasikalStudents(selectEl) {
+            const list = [];
+            Array.from(selectEl.options).forEach(opt => {
+                if (opt.value) list.push({ nama: opt.value, nis: opt.getAttribute('data-nis') || '' });
+            });
+            return list;
+        }
+
+        function toggleNamaSiswaKlasikal(jenisSelectId, namaSelectId) {
+            const jenisSelect = document.getElementById(jenisSelectId);
+            const namaSelect = document.getElementById(namaSelectId);
+            if (!jenisSelect || !namaSelect) return;
+            const isKlasikal = jenisSelect.value === 'Bimbingan Klasikal';
+            namaSelect.disabled = isKlasikal;
+            namaSelect.classList.toggle('opacity-50', isKlasikal);
+        }
+
+        const psJenisBimbinganEl = document.getElementById('psJenisBimbingan');
+        if (psJenisBimbinganEl) {
+            psJenisBimbinganEl.addEventListener('change', () => toggleNamaSiswaKlasikal('psJenisBimbingan', 'psNamaSiswa'));
+        }
+        const psJenisBimbinganWgEl = document.getElementById('psJenisBimbinganWg');
+        if (psJenisBimbinganWgEl) {
+            psJenisBimbinganWgEl.addEventListener('change', () => toggleNamaSiswaKlasikal('psJenisBimbinganWg', 'psNamaSiswaWg'));
+        }
+
+        // Simpan berkas penanganan secara berantai (sequential) untuk beberapa siswa sekaligus (mode Bimbingan Klasikal)
+        function saveKlasikalBatch(students, baseData, onAllDone) {
+            let idx = 0;
+            function next() {
+                if (idx >= students.length) {
+                    onAllDone();
+                    return;
+                }
+                const s = students[idx];
+                idx++;
+                const dataBaru = Object.assign({}, baseData, {
+                    id: "CASE-" + Date.now() + "-" + idx,
+                    nis: s.nis,
+                    nama: s.nama
+                });
+                runBackend('savePenanganan', [dataBaru], next);
+            }
+            next();
+        }
+
         // Submit Penanganan Siswa (Wali Kelas Form)
         document.getElementById('submitPenangananBtn').addEventListener('click', () => {
             const select = document.getElementById('psNamaSiswa');
+            const bimbingan = document.getElementById('psJenisBimbingan').value;
+            const isKlasikal = bimbingan === 'Bimbingan Klasikal';
             const nama = select.value;
             const selectedOpt = select.options[select.selectedIndex];
             const nis = selectedOpt ? (selectedOpt.getAttribute('data-nis') || '') : '';
             const tgl = document.getElementById('psTanggal').value;
-            const bimbingan = document.getElementById('psJenisBimbingan').value;
             const masalah = document.getElementById('psMasalah').value;
             const tindakLanjut = document.getElementById('psTindakLanjut').value;
 
-            if(!nama || !masalah || !tindakLanjut) {
+            if (isKlasikal) {
+                if (!masalah || !tindakLanjut) {
+                    alertModal("Peringatan", "Harap isi Masalah serta Tindak Lanjut.");
+                    return;
+                }
+            } else if (!nama || !masalah || !tindakLanjut) {
                 alertModal("Peringatan", "Harap isi Nama Siswa, Masalah, serta Tindak Lanjut.");
                 return;
             }
@@ -5280,10 +5335,7 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                 ortu: document.getElementById('checkOrtuWk').checked ? document.getElementById('canvasTtdOrtuWk').toDataURL() : null
             };
 
-            const dataBaru = {
-                id: "CASE-" + Date.now(),
-                nis: nis,
-                nama: nama,
+            const baseData = {
                 tanggal: tgl,
                 jenis_bimbingan: bimbingan,
                 masalah: masalah,
@@ -5294,26 +5346,49 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
             };
 
             showLoading(true);
-            runBackend('savePenanganan', [dataBaru], function() {
-                showLoading(false);
-                alertModal("Sukses", "Kasus penanganan siswa (Wali Kelas) sukses disimpan!");
-                resetPenangananForm();
-                renderPenangananList();
-            });
+
+            if (isKlasikal) {
+                const students = getKlasikalStudents(select);
+                if (students.length === 0) {
+                    showLoading(false);
+                    alertModal("Peringatan", "Tidak ada siswa binaan yang tersedia untuk Bimbingan Klasikal.");
+                    return;
+                }
+                saveKlasikalBatch(students, baseData, function() {
+                    showLoading(false);
+                    alertModal("Sukses", "Kasus Bimbingan Klasikal (Wali Kelas) sukses disimpan untuk " + students.length + " siswa!");
+                    resetPenangananForm();
+                    renderPenangananList();
+                });
+            } else {
+                const dataBaru = Object.assign({}, baseData, { id: "CASE-" + Date.now(), nis: nis, nama: nama });
+                runBackend('savePenanganan', [dataBaru], function() {
+                    showLoading(false);
+                    alertModal("Sukses", "Kasus penanganan siswa (Wali Kelas) sukses disimpan!");
+                    resetPenangananForm();
+                    renderPenangananList();
+                });
+            }
         });
 
         // Submit Penanganan Siswa (Wali Guru Form)
         document.getElementById('submitPenangananBtnWg').addEventListener('click', () => {
             const select = document.getElementById('psNamaSiswaWg');
+            const bimbingan = document.getElementById('psJenisBimbinganWg').value;
+            const isKlasikal = bimbingan === 'Bimbingan Klasikal';
             const nama = select.value;
             const selectedOpt = select.options[select.selectedIndex];
             const nis = selectedOpt ? (selectedOpt.getAttribute('data-nis') || '') : '';
             const tgl = document.getElementById('psTanggalWg').value;
-            const bimbingan = document.getElementById('psJenisBimbinganWg').value;
             const masalah = document.getElementById('psMasalahWg').value;
             const tindakLanjut = document.getElementById('psTindakLanjutWg').value;
 
-            if(!nama || !masalah || !tindakLanjut) {
+            if (isKlasikal) {
+                if (!masalah || !tindakLanjut) {
+                    alertModal("Peringatan", "Harap isi Masalah serta Tindak Lanjut.");
+                    return;
+                }
+            } else if (!nama || !masalah || !tindakLanjut) {
                 alertModal("Peringatan", "Harap isi Nama Siswa, Masalah, serta Tindak Lanjut.");
                 return;
             }
@@ -5353,10 +5428,7 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
                 ortu: document.getElementById('checkOrtuWg').checked ? document.getElementById('canvasTtdOrtuWg').toDataURL() : null
             };
 
-            const dataBaru = {
-                id: "CASE-" + Date.now(),
-                nis: nis,
-                nama: nama,
+            const baseData = {
                 tanggal: tgl,
                 jenis_bimbingan: bimbingan,
                 masalah: masalah,
@@ -5367,12 +5439,29 @@ untuk Efisiensi & Integrasi SMAN 1 Parung</p>
             };
 
             showLoading(true);
-            runBackend('savePenanganan', [dataBaru], function() {
-                showLoading(false);
-                alertModal("Sukses", "Kasus penanganan siswa (Wali Guru) sukses disimpan!");
-                resetPenangananFormWg();
-                renderPenangananList();
-            });
+
+            if (isKlasikal) {
+                const students = getKlasikalStudents(select);
+                if (students.length === 0) {
+                    showLoading(false);
+                    alertModal("Peringatan", "Tidak ada siswa binaan yang tersedia untuk Bimbingan Klasikal.");
+                    return;
+                }
+                saveKlasikalBatch(students, baseData, function() {
+                    showLoading(false);
+                    alertModal("Sukses", "Kasus Bimbingan Klasikal (Wali Guru) sukses disimpan untuk " + students.length + " siswa!");
+                    resetPenangananFormWg();
+                    renderPenangananList();
+                });
+            } else {
+                const dataBaru = Object.assign({}, baseData, { id: "CASE-" + Date.now(), nis: nis, nama: nama });
+                runBackend('savePenanganan', [dataBaru], function() {
+                    showLoading(false);
+                    alertModal("Sukses", "Kasus penanganan siswa (Wali Guru) sukses disimpan!");
+                    resetPenangananFormWg();
+                    renderPenangananList();
+                });
+            }
         });
 
         function resetPenangananForm() {
